@@ -166,9 +166,40 @@ class SoulSenseApp:
         self.total_questions = 0
         self.responses = []
 
+        self.total_questions = 0
+        self.responses = []
+
         self.create_login_screen()
 
     # ---------- HELPERS ----------
+    def show_loading(self, message="Loading..."):
+        """Overlay a loading screen"""
+        self.loading_frame = tk.Frame(self.root, bg=self.colors["bg_primary"])
+        self.loading_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+        
+        tk.Label(
+            self.loading_frame,
+            text="⏳",
+            font=("Arial", 40),
+            bg=self.colors["bg_primary"]
+        ).pack(expand=True, pady=(0, 10))
+        
+        tk.Label(
+            self.loading_frame,
+            text=message,
+            font=("Arial", 16),
+            bg=self.colors["bg_primary"],
+            fg=self.colors["text_primary"]
+        ).pack(expand=True)
+        
+        self.root.update()
+
+    def hide_loading(self):
+        """Remove loading screen"""
+        if hasattr(self, 'loading_frame'):
+            self.loading_frame.destroy()
+            del self.loading_frame
+
     def toggle_theme(self):
         # Determine new theme
         new_theme = "dark" if self.current_theme_name == "light" else "light"
@@ -639,8 +670,15 @@ class SoulSenseApp:
         self.age_group = compute_age_group(age)
 
         # -------- LOAD AGE-APPROPRIATE QUESTIONS --------
+        self.show_loading("Loading Questions...")
+        
+        # Artificial delay to demonstrate loading (optional, remove in prod if desired)
+        # self.root.after(500) 
+        
         try:
             print(self.age)
+            # Use after() to prevent freezing if we had a massive DB
+            # For now synchronous is fine but wrapped in try/finally
             rows = load_questions(age=self.age)  # [(id, text, tooltip)]
             
             # Store (text, tooltip) tuples
@@ -653,12 +691,15 @@ class SoulSenseApp:
                 raise RuntimeError("No questions loaded")
 
         except Exception:
+            self.hide_loading()
             logging.error("Failed to load age-appropriate questions", exc_info=True)
             messagebox.showerror(
                 "Error",
                 "No questions available for your age group."
             )
             return
+        
+        self.hide_loading()
 
         logging.info(
             "Session started | user=%s | age=%s | education=%s | age_group=%s",
@@ -847,6 +888,12 @@ class SoulSenseApp:
         return canvas.get_tk_widget()
 
     def finish_test(self):
+        self.show_loading("Analyzing Emotional Intelligence...")
+        
+        # Wrap processing in after to allow UI to render the loading screen first
+        self.root.after(100, self._process_results)
+
+    def _process_results(self):
         total_score = sum(self.responses)
         
         # --- NEW: SIMULATE CATEGORIES (Splitting questions) ---
@@ -878,6 +925,8 @@ class SoulSenseApp:
             session.rollback()
         finally:
             session.close()
+            
+        self.hide_loading()
 
         interpretation = (
             "Excellent Emotional Intelligence!" if total_score >= 30 else

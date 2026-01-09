@@ -1,5 +1,9 @@
 import sqlite3
 import tkinter as tk
+from tkinter import messagebox, ttk
+from journal_feature import JournalFeature
+from analytics_dashboard import AnalyticsDashboard
+from i18n_manager import get_i18n, I18nManager
 from tkinter import messagebox, font
 from journal_feature import JournalFeature
 from analytics_dashboard import AnalyticsDashboard
@@ -26,6 +30,24 @@ except sqlite3.OperationalError:
 
 conn.commit()
 
+
+# Initialize i18n
+i18n = get_i18n()
+
+#QUESTIONS
+#QUESTIONS - Now loaded from translation files
+def get_questions():
+    """Get questions in current language"""
+    question_texts = i18n.get_all_questions()
+    return [
+        {"text": question_texts[0] if len(question_texts) > 0 else "Question 1", "age_min": 12, "age_max": 25},
+        {"text": question_texts[1] if len(question_texts) > 1 else "Question 2", "age_min": 14, "age_max": 30},
+        {"text": question_texts[2] if len(question_texts) > 2 else "Question 3", "age_min": 15, "age_max": 35},
+        {"text": question_texts[3] if len(question_texts) > 3 else "Question 4", "age_min": 13, "age_max": 28},
+        {"text": question_texts[4] if len(question_texts) > 4 else "Question 5", "age_min": 16, "age_max": 40}
+    ]
+
+questions = get_questions()
 # QUESTIONS
 questions = [
     {"text": "You can recognize your emotions as they happen.", "age_min": 12, "age_max": 25},
@@ -474,13 +496,44 @@ def show_analysis_complete(username, score, age, total_questions):
 
 # USER DETAILS WINDOW
 root = tk.Tk()
-root.title("SoulSense - User Details")
-root.geometry("450x380")
+root.title(i18n.get("user_details_title"))
+root.geometry("450x450")
 root.resizable(False, False)
 root.configure(bg=COLORS["light_bg"])
 
-tk.Label(
+# Language selector frame
+lang_frame = tk.Frame(root)
+lang_frame.pack(pady=10)
+
+tk.Label(lang_frame, text=i18n.get("settings.language") + ":", font=("Arial", 10)).pack(side=tk.LEFT, padx=5)
+
+current_lang = tk.StringVar(value=i18n.current_language)
+lang_selector = ttk.Combobox(
+    lang_frame, 
+    textvariable=current_lang,
+    values=list(I18nManager.SUPPORTED_LANGUAGES.keys()),
+    state="readonly",
+    width=10
+)
+lang_selector.pack(side=tk.LEFT, padx=5)
+
+# Title label (will be updated on language change)
+title_label = tk.Label(
     root,
+    text=i18n.get("app_title"),
+    font=("Arial", 20, "bold")
+)
+title_label.pack(pady=20)
+
+# Name label and entry
+name_label = tk.Label(root, text=i18n.get("enter_name"), font=("Arial", 15))
+name_label.pack()
+tk.Entry(root, textvariable=username, font=("Arial", 15), width=25).pack(pady=8)
+
+# Age label and entry
+age_label = tk.Label(root, text=i18n.get("enter_age"), font=("Arial", 15))
+age_label.pack()
+tk.Entry(root, textvariable=age, font=("Arial", 15), width=25).pack(pady=8)
     text="SoulSense Assessment",
     font=("Arial", 22, "bold"),
     bg=COLORS["light_bg"],
@@ -495,7 +548,34 @@ tk.Label(root, text="Enter your age:", font=("Arial", 13), bg=COLORS["light_bg"]
 age_entry = tk.Entry(root, textvariable=tk.StringVar(), font=("Arial", 13), width=25, bg="white", relief="solid", borderwidth=1)
 age_entry.pack(pady=5)
 
+def update_ui_language():
+    """Update all UI elements when language changes"""
+    global questions
+    root.title(i18n.get("user_details_title"))
+    title_label.config(text=i18n.get("app_title"))
+    name_label.config(text=i18n.get("enter_name"))
+    age_label.config(text=i18n.get("enter_age"))
+    start_btn.config(text=i18n.get("start_assessment"))
+    journal_btn.config(text=i18n.get("open_journal"))
+    dashboard_btn.config(text=i18n.get("view_dashboard"))
+    # Reload questions in new language
+    questions = get_questions()
+
+def on_language_change(event):
+    """Handle language selection change"""
+    new_lang = current_lang.get()
+    if i18n.switch_language(new_lang):
+        update_ui_language()
+
+lang_selector.bind('<<ComboboxSelected>>', on_language_change)
+
 def submit_details():
+    if not username.get():
+        messagebox.showerror(i18n.get("errors.empty_name"), i18n.get("errors.empty_name"))
+        return
+    
+    if not age.get().isdigit():
+        messagebox.showerror(i18n.get("errors.invalid_age"), i18n.get("errors.invalid_age"))
     username = name_entry.get().strip()
     age_str = age_entry.get().strip()
     
@@ -505,22 +585,28 @@ def submit_details():
     
     if not age_str.isdigit():
         messagebox.showerror("Error", "Please enter a valid age (numbers only)")
+
         return
     
     user_age = int(age_str)
     if user_age < 12:
-        messagebox.showerror("Error", "Age must be at least 12")
+        messagebox.showerror(i18n.get("errors.minimum_age"), i18n.get("errors.minimum_age"))
         return
 
     root.destroy()
     start_quiz(username, user_age)
 
-tk.Button(
+start_btn = tk.Button(
     root,
-    text="Start Assessment",
+    text=i18n.get("start_assessment"),
     command=submit_details,
     bg=COLORS["primary"],
     fg="white",
+
+    font=("Arial", 14, "bold"),
+    width=20
+)
+start_btn.pack(pady=15)
     font=("Arial", 13, "bold"),
     width=20,
     relief="flat",
@@ -532,8 +618,17 @@ tk.Button(
 # Initialize features
 journal_feature = JournalFeature(root)
 
-tk.Button(
+journal_btn = tk.Button(
     root,
+
+    text=i18n.get("open_journal"),
+    command=lambda: journal_feature.open_journal_window(username.get() or "Guest"),
+    bg="#2196F3",
+    fg="white",
+    font=("Arial", 12),
+    width=20
+)
+journal_btn.pack(pady=5)
     text="📝 Open Journal",
     command=lambda: journal_feature.open_journal_window(name_entry.get() or "Guest"),
     bg=COLORS["secondary"],
@@ -546,8 +641,16 @@ tk.Button(
     cursor="hand2"
 ).pack(pady=5)
 
-tk.Button(
+dashboard_btn = tk.Button(
     root,
+    text=i18n.get("view_dashboard"),
+    command=lambda: AnalyticsDashboard(root, username.get() or "Guest").open_dashboard(),
+    bg="#FF9800",
+    fg="white",
+    font=("Arial", 12),
+    width=20
+)
+dashboard_btn.pack(pady=5)
     text="📊 View Dashboard",
     command=lambda: AnalyticsDashboard(root, name_entry.get() or "Guest").open_dashboard(),
     bg=COLORS["accent"],
@@ -562,6 +665,25 @@ tk.Button(
 
 # QUIZ WINDOW
 def start_quiz(username, age):
+
+    # Get fresh i18n instance
+    quiz_i18n = get_i18n()
+    
+    # Show ALL questions to EVERYONE, regardless of age
+    # We ignore the age_min and age_max filters
+    filtered_questions = questions  # All 5 questions for everyone
+    
+    # If you want MORE questions, add them to the questions list above
+    # For example, add these additional questions:
+    # questions.append({"text": "You can easily put yourself in someone else's shoes.", "age_min": 12, "age_max": 100})
+    # questions.append({"text": "You stay calm under pressure.", "age_min": 12, "age_max": 100})
+    # etc.
+
+    quiz = tk.Tk()
+    quiz.title(quiz_i18n.get("app_title"))
+    quiz.geometry("750x550")
+
+    # Store quiz state in a dictionary to avoid nonlocal issues
     filtered_questions = questions
     
     quiz = tk.Tk()
@@ -636,11 +758,11 @@ def start_quiz(username, age):
     options_frame.pack(fill="both", expand=True, padx=10)
     
     options = [
-        ("Strongly Disagree", 1),
-        ("Disagree", 2),
-        ("Neutral", 3),
-        ("Agree", 4),
-        ("Strongly Agree", 5)
+        (quiz_i18n.get("quiz.strongly_disagree"), 1),
+        (quiz_i18n.get("quiz.disagree"), 2),
+        (quiz_i18n.get("quiz.neutral"), 3),
+        (quiz_i18n.get("quiz.agree"), 4),
+        (quiz_i18n.get("quiz.strongly_agree"), 5)
     ]
     
     # Create radio buttons with better styling
@@ -654,6 +776,20 @@ def start_quiz(username, age):
             text=text,
             variable=var,
             value=val,
+
+            font=("Arial", 14)
+        ).pack(anchor="w", padx=60, pady=2)
+
+    # Question counter
+    counter_label = tk.Label(
+        quiz,
+        text=quiz_i18n.get("quiz.question_counter", current=1, total=len(filtered_questions)),
+        font=("Arial", 12, "bold"),
+        fg="gray"
+    )
+    counter_label.pack(pady=5)
+
+
             font=("Arial", 13),
             bg=COLORS["card_bg"],
             fg=COLORS["text"],
@@ -693,7 +829,11 @@ def start_quiz(username, age):
     def load_question():
         current_q = quiz_state["current_q"]
         question_label.config(text=filtered_questions[current_q]["text"])
-        
+
+        counter_label.config(text=quiz_i18n.get("quiz.question_counter", 
+                                                 current=current_q + 1, 
+                                                 total=len(filtered_questions)))
+
         if current_q < len(quiz_state["responses"]):
             var.set(quiz_state["responses"][current_q])
         else:
@@ -709,10 +849,16 @@ def start_quiz(username, age):
             prev_btn.config(state="normal", bg=COLORS["secondary"])
         
         if current_q == len(filtered_questions) - 1:
+
+            next_btn.config(text=quiz_i18n.get("quiz.finish"))
+        else:
+            next_btn.config(text=quiz_i18n.get("quiz.next"))
+
+
             next_btn.config(text="Finish Assessment ✓")
         else:
             next_btn.config(text="Next Question →")
-    
+
     def save_current_answer():
         current_answer = var.get()
         if current_answer > 0:
@@ -733,7 +879,12 @@ def start_quiz(username, age):
         current_q = quiz_state["current_q"]
 
         if var.get() == 0:
+
+            messagebox.showwarning(quiz_i18n.get("quiz.warning"), 
+                                  quiz_i18n.get("errors.select_option"))
+
             messagebox.showwarning("Selection Required", "Please select an option to continue.")
+
             return
 
         save_current_answer()
@@ -753,11 +904,25 @@ def start_quiz(username, age):
             )
             conn.commit()
 
+
+            # Show completion message with options
+            max_score = len(filtered_questions) * 5
+            avg_score = quiz_state['score']/len(filtered_questions)
+            
+            result = messagebox.askyesno(
+                quiz_i18n.get("results.completed"),
+                f"{quiz_i18n.get('results.thank_you', username=quiz_state['username'])}\n"
+                f"{quiz_i18n.get('results.your_score', score=quiz_state['score'], max_score=max_score)}\n"
+                f"{quiz_i18n.get('results.average', average=f'{avg_score:.1f}')}\n\n"
+                f"{quiz_i18n.get('results.view_dashboard_prompt')}"
+            )
+
             # Store references before destroying quiz window
             username = quiz_state["username"]
             score = quiz_state["score"]
             age = quiz_state["age"]
             total_questions = len(filtered_questions)
+
             
             # Destroy the quiz window first
             quiz.destroy()
@@ -768,7 +933,11 @@ def start_quiz(username, age):
     # Previous button
     prev_btn = tk.Button(
         nav_frame,
+
+        text=quiz_i18n.get("quiz.previous"),
+
         text="← Previous Question",
+
         command=previous_question,
         bg="#B0BEC5",
         fg="white",
@@ -785,7 +954,11 @@ def start_quiz(username, age):
     # Next button
     next_btn = tk.Button(
         nav_frame,
+
+        text=quiz_i18n.get("quiz.next"),
+
         text="Next Question →",
+
         command=next_question,
         bg=COLORS["primary"],
         fg="white",

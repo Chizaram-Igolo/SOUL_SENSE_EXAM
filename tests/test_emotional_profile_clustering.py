@@ -1,10 +1,3 @@
-"""
-Tests for Emotional Profile Clustering Module
-Tests clustering functionality, feature extraction, and profile assignment.
-
-Issue: #109 - Add Emotional Profile Clustering
-"""
-
 import pytest
 import numpy as np
 import pandas as pd

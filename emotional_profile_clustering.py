@@ -1,17 +1,3 @@
-"""
-Emotional Profile Clustering Module for SoulSense
-Clusters users into emotional profiles using unsupervised learning techniques.
-
-This module implements:
-- K-Means clustering for emotional profile categorization
-- Hierarchical clustering for profile hierarchy
-- DBSCAN for density-based profile discovery
-- Profile visualization and interpretation
-- User profile assignment and tracking
-
-Issue: #109 - Add Emotional Profile Clustering
-"""
-
 import numpy as np
 import pandas as pd
 import logging

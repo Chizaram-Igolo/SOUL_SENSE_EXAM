@@ -10,12 +10,15 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from model_evaluation import ModelEvaluator, compare_models
-from ml_predictor import SoulSenseMLPredictor
-from Emotion_Classification.predict import EmotionPredictor
-from Emotion_Classification.train import train as train_emotion_model
+# Add experiments directory to path for legacy emotion classification support
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "experiments"))
+
+from scripts.model_evaluation import ModelEvaluator, compare_models
+from app.ml.predictor import SoulSenseMLPredictor
+from emotion_classification.predict import EmotionPredictor
+from emotion_classification.train import train as train_emotion_model
 import numpy as np
 import joblib
 from sklearn.model_selection import train_test_split

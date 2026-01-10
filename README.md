@@ -10,18 +10,22 @@ It provides a✅ Tip: If you see `ModuleNotFoundError`, it usually means your vi
 SoulSense now supports multiple languages with easy switching!
 
 ### Supported Languages
+
 - **English** (default)
 - **हिंदी (Hindi)**
 - **Español (Spanish)**
 
 ### Quick Start
+
 1. Launch the application
 2. Select your language from the dropdown at the top of the main screen
 3. All UI elements update instantly
 4. Your preference is saved automatically
 
 ### For Contributors
+
 Want to add your language? See our [I18N Guide](I18N_GUIDE.md) for:
+
 - Step-by-step instructions
 - Translation template
 - Testing guidelines
@@ -33,6 +37,7 @@ Want to add your language? See our [I18N Guide](I18N_GUIDE.md) for:
 SoulSense includes a powerful admin interface for managing questions and categories.
 
 ### Features
+
 - **GUI Admin Panel** - User-friendly graphical interface
 - **CLI Tool** - Command-line interface for automation
 - **Secure Access** - Password-protected admin accounts
@@ -43,16 +48,19 @@ SoulSense includes a powerful admin interface for managing questions and categor
 ### Quick Start
 
 **Create Admin Account:**
+
 ```bash
 python admin_cli.py create-admin --no-auth
 ```
 
 **Launch GUI:**
+
 ```bash
 python admin_interface.py
 ```
 
 **CLI Commands:**
+
 ```bash
 python admin_cli.py list                    # List all questions
 python admin_cli.py add                     # Add new question
@@ -63,6 +71,7 @@ python admin_cli.py categories              # View statistics
 ```
 
 ### Documentation
+
 See [ADMIN_GUIDE.md](ADMIN_GUIDE.md) for comprehensive documentation.
 
 ---
@@ -206,33 +215,36 @@ Based on sentiment ranges:
 SOUL_SENSE_EXAM/
 │
 ├── app/                     # Core application package
-│   ├── __init__.py
+│   ├── ml/                  # Machine Learning modules
+│   │   ├── __init__.py
+│   │   ├── predictor.py
+│   │   ├── clustering.py
+│   │   └── ...
+│   ├── ui/                  # UI components
+│   │   ├── dashboard.py
+│   │   ├── journal.py
+│   │   └── ...
 │   ├── main.py              # Tkinter application entry point
 │   ├── config.py            # Centralized configuration
 │   ├── db.py                # Database connection & migrations
-│   ├── models.py            # SQLAlchemy models
-│   ├── auth.py              # Authentication logic
-│   ├── questions.py         # Question loading logic
-│   └── utils.py             # Shared helpers
+│   ├── i18n_manager.py      # Internationalization
+│   └── ...
 │
-├── migrations/              # Alembic migrations
-│   ├── versions/            # Migration scripts
-│   └── env.py               # Alembic config
+├── data/                    # persistent data
+│   ├── soulsense.db         # SQLite database
+│   ├── questions.txt        # Source question bank
+│   └── experiments/         # ML experiments
 │
-├── scripts/                 # Maintenance scripts
-│   ├── __init__.py
-│   └── load_questions.py    # Seed data loader
-│
-├── data/
-│   └── questions.txt        # Source question bank
-│
-├── db/
-│   └── soulsense.db         # SQLite database
-│
-├── tests/                   # Pytest test suite
+├── models/                  # ML models & registry
+│   ├── soulsense_ml_model.pkl
+│   └── registry/
 │
 ├── logs/
 │   └── soulsense.log        # Application logs
+│
+├── scripts/                 # Maintenance scripts
+├── tests/                   # Pytest test suite
+├── migrations/              # Alembic migrations
 │
 ├── alembic.ini              # Alembic config
 ├── pytest.ini               # Pytest config
@@ -407,6 +419,7 @@ Tests use temporary SQLite databases and do not affect production data.
 The outlier detection module identifies extreme or inconsistent emotional intelligence scores using advanced statistical methods.
 
 **Supported Methods:**
+
 - **Z-Score**: Identifies scores deviating significantly from mean
 - **IQR (Interquartile Range)**: Robust method for skewed distributions
 - **Modified Z-Score**: Uses median/MAD for robustness
@@ -439,7 +452,7 @@ python scripts/outlier_analysis.py --user john_doe --format json
 
 ```python
 from app.db import get_session
-from app.outlier_detection import OutlierDetector
+from app.analysis.outlier_detection import OutlierDetector
 
 detector = OutlierDetector()
 session = get_session()

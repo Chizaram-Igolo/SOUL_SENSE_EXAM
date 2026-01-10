@@ -60,12 +60,35 @@ def save_config(new_config):
 _config = load_config()
 
 # Expose Settings
+# Expose Settings
 DB_DIR_NAME = _config["database"]["path"]
 DB_FILENAME = _config["database"]["filename"]
 
+# Directory Definitions
+DATA_DIR = os.path.join(BASE_DIR, "data")
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+MODELS_DIR = os.path.join(BASE_DIR, "models")
+
+# Ensure directories exist
+for directory in [DATA_DIR, LOG_DIR, MODELS_DIR]:
+    if not os.path.exists(directory):
+        try:
+            os.makedirs(directory)
+        except OSError:
+            pass
+
 # Calculated Paths
-DB_PATH = os.path.join(BASE_DIR, DB_DIR_NAME, DB_FILENAME)
+# If DB_DIR_NAME is just a name (e.g. "db"), put it in DATA_DIR?
+# Or keep existing logic but default to Data?
+# Let's map "db" to DATA_DIR for simplicity if it matches default.
+if DB_DIR_NAME == "db":
+    DB_PATH = os.path.join(DATA_DIR, DB_FILENAME)
+else:
+    # Allow custom path relative to BASE_DIR if specified in config.json
+    DB_PATH = os.path.join(BASE_DIR, DB_DIR_NAME, DB_FILENAME)
+
 DATABASE_URL = f"sqlite:///{DB_PATH}"
+
 
 
 # Ensure DB Directory Exists

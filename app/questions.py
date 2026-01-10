@@ -11,11 +11,12 @@ from sqlalchemy.orm import Session
 from app.db import get_session, safe_db_context
 from app.models import Question, QuestionCache, StatisticsCache
 from app.exceptions import DatabaseError, ResourceError
+from app.config import DATA_DIR
 
 logger = logging.getLogger(__name__)
 
 # ------------------ CACHING CONFIGURATION ------------------
-CACHE_DIR = "cache"
+CACHE_DIR = os.path.join(DATA_DIR, "cache")
 CACHE_FILE = os.path.join(CACHE_DIR, "questions_cache.json")
 CACHE_MAX_AGE_HOURS = 24  # Cache valid for 24 hours
 MEMORY_CACHE_TTL = 300  # 5 minutes for memory cache

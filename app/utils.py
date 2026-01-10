@@ -2,8 +2,9 @@
 import json
 import os
 import logging
+from app.config import DATA_DIR
 
-SETTINGS_FILE = "settings.json"
+SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 DEFAULT_SETTINGS = {
     "question_count": 10,
     "theme": "light",

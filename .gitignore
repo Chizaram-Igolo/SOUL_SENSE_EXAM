@@ -109,18 +109,21 @@ __pypackages__/
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
-db/*.db 
-db/*.sqlite 
-soulsesne_db
+# =========================
+# Data Organization
+# =========================
+data/*.db
+data/*.sqlite
+data/soulsense.db
+data/experiments/
+data/model_metrics.txt
+data/confusion_matrix.png
 
 # =========================
 # ML Artifacts
 # =========================
-*.pkl
-*.png
-model_metrics.txt
-
-###  registry data and experiment logs
-
+models/*.pkl
 models/registry/
-experiments/
+
+# Logs
+logs/

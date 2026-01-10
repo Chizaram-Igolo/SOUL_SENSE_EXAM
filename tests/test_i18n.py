@@ -9,7 +9,7 @@ import sys
 # Add the current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from i18n_manager import get_i18n, I18nManager
+from app.i18n_manager import get_i18n, I18nManager
 
 def test_i18n():
     """Test the i18n implementation"""

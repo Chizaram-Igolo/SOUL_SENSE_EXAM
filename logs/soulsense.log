@@ -1128,3 +1128,32 @@ TypeError: 'Response' object is not subscriptable
 2026-01-10 18:30:49,554 - app.ml.clustering - WARNING - Model not fitted. Call fit() first.
 2026-01-10 18:31:20,570 - root - INFO - Reloaded 9 questions based on settings
 2026-01-10 18:31:25,591 - root - INFO - Reloaded 9 questions based on settings
+2026-01-10 18:39:09,003 - root - INFO - Logging initialized.
+2026-01-10 18:39:09,005 - root - INFO - Application started
+2026-01-10 18:39:09,052 - root - INFO - Loaded 10 total questions from DB
+2026-01-10 18:39:09,476 - root - INFO - ML Predictor initialized successfully
+2026-01-10 18:39:09,500 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-10 18:39:09,501 - root - INFO - Using 9 questions based on settings
+2026-01-10 18:46:42,216 - root - INFO - Logging initialized.
+2026-01-10 18:46:42,223 - root - INFO - Application started
+2026-01-10 18:46:42,225 - root - INFO - Loaded 10 total questions from DB
+2026-01-10 18:48:04,057 - root - INFO - Logging initialized.
+2026-01-10 18:48:04,065 - root - INFO - Application started
+2026-01-10 18:48:04,072 - root - INFO - Loaded 10 total questions from DB
+2026-01-10 18:54:26,161 - root - INFO - Logging initialized.
+2026-01-10 18:54:26,172 - root - INFO - Application started
+2026-01-10 18:54:26,174 - root - INFO - Loaded 10 total questions from DB
+2026-01-10 18:54:28,580 - root - INFO - ML Predictor initialized successfully
+2026-01-10 18:54:28,608 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-10 18:54:28,609 - root - INFO - Using 9 questions based on settings
+2026-01-10 18:54:37,791 - root - INFO - Session started | user=rohan | age=20 | age_group=adult | profession=Student | questions=9
+2026-01-10 18:55:22,615 - app.db - ERROR - Unexpected error in DB context: 'Response' object is not subscriptable
+Traceback (most recent call last):
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\db.py", line 32, in safe_db_context
+    yield session
+  File "B:\Open_Source\soul_sence_Exam\SOUL_SENSE_EXAM\app\time_based_analysis.py", line 218, in analyze_response_patterns_over_time
+    all_values = [r["response_value"] for r in responses]
+                  ~^^^^^^^^^^^^^^^^^^
+TypeError: 'Response' object is not subscriptable
+2026-01-10 18:55:22,618 - app.time_based_analysis - ERROR - Error analyzing response patterns for rohan: An unexpected database error occurred.
+2026-01-10 18:55:22,714 - app.ml.clustering - WARNING - Model not fitted. Call fit() first.

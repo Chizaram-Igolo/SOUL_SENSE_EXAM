@@ -18,6 +18,8 @@ warnings.filterwarnings('ignore')
 from app.data_cleaning import DataCleaner
 from .versioning import ModelVersioningManager, create_versioning_manager
 import logging
+from app.config import MODELS_DIR, DATA_DIR
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -230,11 +232,12 @@ class SoulSenseMLPredictor:
     def save_evaluation_artifacts(self, y_true, y_pred, report):
         """Save confusion matrix plot and metrics text"""
         # 1. Save Metrics Text
-        with open('model_metrics.txt', 'w', encoding='utf-8') as f:
+        metrics_path = os.path.join(DATA_DIR, 'model_metrics.txt')
+        with open(metrics_path, 'w', encoding='utf-8') as f:
             f.write("SoulSense ML Model Evaluation\n")
             f.write("=============================\n\n")
             f.write(report)
-        print("📝 Metrics saved to model_metrics.txt")
+        print(f"📝 Metrics saved to {metrics_path}")
         
         # 2. Save Confusion Matrix Plot
         cm = confusion_matrix(y_true, y_pred)
@@ -246,9 +249,10 @@ class SoulSenseMLPredictor:
         plt.ylabel('True Label')
         plt.xlabel('Predicted Label')
         plt.tight_layout()
-        plt.savefig('confusion_matrix.png')
+        cm_path = os.path.join(DATA_DIR, 'confusion_matrix.png')
+        plt.savefig(cm_path)
         plt.close()
-        print("📉 Confusion matrix saved to confusion_matrix.png")
+        print(f"📉 Confusion matrix saved to {cm_path}")
     
     def predict_with_explanation(self, q_scores, age, total_score, sentiment_score=0.0):
         """Make prediction with XAI explanations"""
@@ -496,9 +500,10 @@ class SoulSenseMLPredictor:
             'version': self.current_version
         }
         
-        with open('soulsense_ml_model.pkl', 'wb') as f:
+        model_path = os.path.join(MODELS_DIR, 'soulsense_ml_model.pkl')
+        with open(model_path, 'wb') as f:
             pickle.dump(model_data, f)
-        print("✅ ML model saved to soulsense_ml_model.pkl")
+        print(f"✅ ML model saved to {model_path}")
     
     def load_model(self, version: str = None):
         """Load model with versioning support"""
@@ -536,7 +541,13 @@ class SoulSenseMLPredictor:
         
         # Fall back to legacy pkl file
         if not loaded_from_registry:
-            with open('soulsense_ml_model.pkl', 'rb') as f:
+            model_path = os.path.join(MODELS_DIR, 'soulsense_ml_model.pkl')
+            if not os.path.exists(model_path):
+                 # Try legacy path in root for migration safety?
+                 if os.path.exists('soulsense_ml_model.pkl'):
+                     model_path = 'soulsense_ml_model.pkl'
+
+            with open(model_path, 'rb') as f:
                 model_data = pickle.load(f)
             
             self.model = model_data['model']

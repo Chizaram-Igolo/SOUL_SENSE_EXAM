@@ -21,6 +21,7 @@ from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, asdict, field
 import uuid
 import logging
+from app.config import MODELS_DIR, DATA_DIR
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -112,8 +113,8 @@ class ModelRegistry:
     - Model comparison and rollback
     """
     
-    def __init__(self, registry_path: str = "models/registry"):
-        self.registry_path = Path(registry_path)
+    def __init__(self, registry_path: str = None):
+        self.registry_path = Path(registry_path or os.path.join(MODELS_DIR, "registry"))
         self.models_path = self.registry_path / "models"
         self.metadata_file = self.registry_path / "registry.json"
         
@@ -479,8 +480,8 @@ class ExperimentTracker:
     - Generate reports
     """
     
-    def __init__(self, experiments_path: str = "experiments"):
-        self.experiments_path = Path(experiments_path)
+    def __init__(self, experiments_path: str = None):
+        self.experiments_path = Path(experiments_path or os.path.join(DATA_DIR, "experiments"))
         self.experiments_path.mkdir(parents=True, exist_ok=True)
         self.experiments_file = self.experiments_path / "experiments.json"
         self.experiments = self._load_experiments()
@@ -780,8 +781,8 @@ class ModelVersioningManager:
     
     def __init__(
         self,
-        registry_path: str = "models/registry",
-        experiments_path: str = "experiments"
+        registry_path: str = None,
+        experiments_path: str = None
     ):
         self.registry = ModelRegistry(registry_path)
         self.tracker = ExperimentTracker(experiments_path)

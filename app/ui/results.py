@@ -322,7 +322,7 @@ class ResultsManager:
         # Menu button on left
         menu_btn = tk.Button(
             header_inner,
-            text="☰ Menu",
+            text="\u2630 Menu",
             font=("Segoe UI", 10),
             bg="#16A34A", fg="white",
             activebackground="#15803D", activeforeground="white",
@@ -338,7 +338,7 @@ class ResultsManager:
         
         tk.Label(
             title_frame,
-            text="🎉 Assessment Complete!",
+            text="\U0001f389 Assessment Complete!",
             font=("Segoe UI", 22, "bold"),
             bg="#22C55E", fg="white"
         ).pack()
@@ -473,12 +473,12 @@ class ResultsManager:
         btn_frame.pack()
         
         actions = [
-            ("📊 Dashboard", "#14B8A6", self.app.open_dashboard_flow if hasattr(self.app, 'open_dashboard_flow') else None),
-            ("📈 Analysis", "#EC4899", self.show_detailed_analysis),
-            ("🤖 AI Insights", "#8B5CF6", self.show_ml_analysis if self.app.ml_predictor else None),
-            ("📄 Export PDF", "#06B6D4", self.export_results_pdf),
-            ("🔄 Retake Test", "#3B82F6", self.reset_test),
-            ("📜 History", "#F97316", self.show_history_screen),
+            ("\U0001f4ca Dashboard", "#14B8A6", self.app.open_dashboard_flow if hasattr(self.app, 'open_dashboard_flow') else None),
+            ("\U0001f4c8 Analysis", "#EC4899", self.show_detailed_analysis),
+            ("\U0001f916 AI Insights", "#8B5CF6", self.show_ml_analysis if self.app.ml_predictor else None),
+            ("\U0001f4c4 Export PDF", "#06B6D4", self.export_results_pdf),
+            ("\U0001f504 Retake Test", "#3B82F6", self.reset_test),
+            ("\U0001f4dc History", "#F97316", self.show_history_screen),
         ]
         
         for i, (text, color, cmd) in enumerate(actions):

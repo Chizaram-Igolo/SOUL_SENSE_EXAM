@@ -20,30 +20,35 @@ Both models are evaluated using industry-standard classification metrics to ensu
 ### Core Classification Metrics
 
 #### Accuracy
+
 - **Definition**: Proportion of correct predictions out of total predictions
 - **Formula**: (TP + TN) / (TP + TN + FP + FN)
 - **Range**: 0.0 to 1.0 (higher is better)
 - **Interpretation**: Overall model correctness
 
 #### Precision
+
 - **Definition**: Proportion of positive predictions that are actually correct
 - **Formula**: TP / (TP + FP)
 - **Range**: 0.0 to 1.0 (higher is better)
 - **Interpretation**: How reliable are the positive predictions?
 
 #### Recall (Sensitivity)
+
 - **Definition**: Proportion of actual positives correctly identified
 - **Formula**: TP / (TP + FN)
 - **Range**: 0.0 to 1.0 (higher is better)
 - **Interpretation**: How many actual positives did we catch?
 
 #### F1-Score
+
 - **Definition**: Harmonic mean of precision and recall
 - **Formula**: 2 × (Precision × Recall) / (Precision + Recall)
 - **Range**: 0.0 to 1.0 (higher is better)
 - **Interpretation**: Balanced measure of precision and recall
 
 #### AUC-ROC
+
 - **Definition**: Area Under the Receiver Operating Characteristic curve
 - **Range**: 0.0 to 1.0 (higher is better)
 - **Interpretation**: Model's ability to discriminate between classes
@@ -53,6 +58,7 @@ Both models are evaluated using industry-standard classification metrics to ensu
 **RMSE (Root Mean Squared Error)** is a regression metric used for models that predict continuous numerical values (e.g., predicting house prices, temperature).
 
 Both Soul Sense models are **classification models** that predict discrete categories:
+
 - Depression Risk Predictor: Predicts "Low Risk", "Moderate Risk", or "High Risk"
 - Emotion Classifier: Predicts "Negative", "Neutral", or "Positive"
 
@@ -71,6 +77,7 @@ python evaluate_models.py
 ```
 
 This script:
+
 - ✅ Evaluates Depression Risk Predictor
 - ✅ Evaluates Emotion Classifier
 - ✅ Generates confusion matrices
@@ -192,19 +199,19 @@ The ROC curve plots True Positive Rate vs. False Positive Rate:
 
 #### Depression Risk Predictor
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Accuracy | >85% | 85-90% |
-| F1-Score | >0.85 | 0.85-0.88 |
-| Precision | >0.85 | 0.86-0.89 |
+| Metric    | Target | Current   |
+| --------- | ------ | --------- |
+| Accuracy  | >85%   | 85-90%    |
+| F1-Score  | >0.85  | 0.85-0.88 |
+| Precision | >0.85  | 0.86-0.89 |
 
 #### Emotion Classifier
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Accuracy | >75% | 75-85% |
-| F1-Score | >0.74 | 0.74-0.84 |
-| Precision | >0.73 | 0.73-0.83 |
+| Metric    | Target | Current   |
+| --------- | ------ | --------- |
+| Accuracy  | >75%   | 75-85%    |
+| F1-Score  | >0.74  | 0.74-0.84 |
+| Precision | >0.73  | 0.73-0.83 |
 
 ---
 
@@ -220,6 +227,7 @@ The ROC curve plots True Positive Rate vs. False Positive Rate:
 ### When to Retrain
 
 Consider retraining if:
+
 - ❌ Accuracy drops below target threshold
 - ❌ Significant performance degradation on new data
 - ❌ User feedback indicates poor predictions
@@ -228,16 +236,19 @@ Consider retraining if:
 ### Improvement Strategies
 
 1. **Data Quality**
+
    - Collect more diverse training samples
    - Fix labeling errors
    - Balance class distributions
 
 2. **Feature Engineering**
+
    - Add relevant features
    - Remove noisy features
    - Transform features (scaling, encoding)
 
 3. **Hyperparameter Tuning**
+
    - Adjust model parameters
    - Use grid search or random search
    - Cross-validation for robustness
@@ -282,22 +293,16 @@ class ModelEvaluator(model_name: str, model_type: str)
 
 - `evaluate_classification(y_true, y_pred, y_proba=None, class_names=None, average='weighted')`
   - Returns: Dictionary of metrics
-  
 - `evaluate_regression(y_true, y_pred)`
   - Returns: Dictionary of metrics
-  
 - `save_confusion_matrix(y_true, y_pred, class_names, output_path)`
   - Saves: PNG visualization
-  
 - `save_roc_curve(y_true, y_proba, class_names=None, output_path)`
   - Saves: PNG visualization
-  
 - `save_metrics_report(output_path)`
   - Saves: Text report
-  
 - `save_metrics_json(output_path)`
   - Saves: JSON metrics
-  
 - `generate_full_report(y_true, y_pred, y_proba=None, class_names=None, output_dir)`
   - Generates: Complete evaluation package
 
@@ -306,6 +311,7 @@ class ModelEvaluator(model_name: str, model_type: str)
 ```python
 compare_models(evaluators: list, output_path: str)
 ```
+
 - Creates side-by-side comparison visualization
 
 ---
@@ -315,15 +321,19 @@ compare_models(evaluators: list, output_path: str)
 ### Common Issues
 
 **Issue**: "No module named 'model_evaluation'"
+
 - **Solution**: Ensure you're in the project root directory
 
 **Issue**: "Model file not found"
+
 - **Solution**: Train the models first using `ml_predictor.py` and `Emotion_Classification/train.py`
 
 **Issue**: "Not enough data for evaluation"
+
 - **Solution**: Ensure test dataset has sufficient samples (minimum 20 per class)
 
 **Issue**: "AUC calculation failed"
+
 - **Solution**: Check if probabilities are provided and classes are properly encoded
 
 ---
@@ -331,6 +341,7 @@ compare_models(evaluators: list, output_path: str)
 ## References
 
 For academic references on evaluation metrics and best practices, see:
+
 - [RESEARCH_REFERENCES.md](RESEARCH_REFERENCES.md) - Comprehensive academic citations
 - [Model Cards](model_cards/) - Detailed model documentation
 
@@ -338,7 +349,7 @@ For academic references on evaluation metrics and best practices, see:
 
 - **Classification Metrics**: Powers, D. M. (2011). "Evaluation: From Precision, Recall and F-Measure to ROC, Informedness, Markedness and Correlation"
 - **Model Evaluation**: Kohavi, R. (1995). "A Study of Cross-Validation and Bootstrap for Accuracy Estimation"
-- **Imbalanced Data**: He, H., & Garcia, E. A. (2009). "Learning from Imbalanced Data"
+- **Imbalanced Data**: Haibo He, & Garcia, E. A. (2009). "Learning from Imbalanced Data"
 
 ---
 

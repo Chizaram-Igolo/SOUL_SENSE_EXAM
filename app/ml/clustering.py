@@ -338,9 +338,11 @@ class EmotionalProfileClusterer:
         
         # Store user profiles
         for username, label in zip(usernames, self.labels_):
+            profile_data = EMOTIONAL_PROFILES.get(label, EMOTIONAL_PROFILES[0])
             self.user_profiles[username] = {
                 'cluster_id': int(label),
-                'profile': EMOTIONAL_PROFILES.get(label, EMOTIONAL_PROFILES[0]),
+                'profile': profile_data,
+                'profile_name': profile_data['name'],
                 'assigned_at': datetime.utcnow().isoformat()
             }
         
@@ -507,7 +509,10 @@ class EmotionalProfileClusterer:
         for k in k_range:
             kmeans = KMeans(n_clusters=k, random_state=self.random_state, n_init=10)
             labels = kmeans.fit_predict(X)
-            score = silhouette_score(X, labels)
+            try:
+                score = silhouette_score(X, labels)
+            except ValueError:
+                score = -1.0 # Invalid for single cluster
             silhouette_scores.append(score)
         
         optimal_k = k_range[np.argmax(silhouette_scores)]

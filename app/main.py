@@ -318,9 +318,9 @@ class SoulSenseApp:
         settings_text = self.create_widget(
             tk.Label,
             settings_frame,
-            text=f"ΓÇó Questions: {len(self.questions)}\n" +
-                 f"ΓÇó Theme: {self.settings.get('theme', 'light').title()}\n" +
-                 f"ΓÇó Sound: {'On' if self.settings.get('sound_effects', True) else 'Off'}",
+            text=f"\u2022 Questions: {len(self.questions)}\n" +
+                 f"\u2022 Theme: {self.settings.get('theme', 'light').title()}\n" +
+                 f"\u2022 Sound: {'On' if self.settings.get('sound_effects', True) else 'Off'}",
             font=("Arial", 10),
             justify="left"
         )

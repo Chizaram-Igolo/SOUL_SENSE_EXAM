@@ -118,7 +118,7 @@ class AuthManager:
         # Primary Action: Start Assessment
         start_btn = tk.Button(
             buttons_frame,
-            text="▶  Start Assessment",
+            text="\u25b6  Start Assessment",
             command=self.create_username_screen,
             font=("Segoe UI", 14, "bold"),
             bg=colors.get("primary", "#3B82F6"),
@@ -142,7 +142,7 @@ class AuthManager:
         # Journal Button
         journal_btn = tk.Button(
             secondary_frame,
-            text="📖 Journal",
+            text="\U0001f4d6 Journal",
             command=self.app.open_journal_flow,
             font=("Segoe UI", 11),
             bg=colors.get("success", "#10B981"),
@@ -162,7 +162,7 @@ class AuthManager:
         # Dashboard Button
         dashboard_btn = tk.Button(
             secondary_frame,
-            text="📊 Dashboard",
+            text="\U0001f4ca Dashboard",
             command=self.app.open_dashboard_flow,
             font=("Segoe UI", 11),
             bg=colors.get("secondary", "#8B5CF6"),
@@ -207,7 +207,7 @@ class AuthManager:
         # Settings Button
         settings_btn = tk.Button(
             tertiary_frame,
-            text="⚙ Settings",
+            text="\u2699 Settings",
             command=self.app.show_settings,
             font=("Segoe UI", 10),
             bg=colors.get("surface", "#FFFFFF"),

@@ -359,6 +359,9 @@ def clear_all_caches():
     with _cache_lock:
         _questions_cache.clear()
         _cache_timestamps.clear()
+        
+    # Clear LRU cache
+    _get_cached_questions_from_db.cache_clear()
     
     try:
         if os.path.exists(CACHE_DIR):

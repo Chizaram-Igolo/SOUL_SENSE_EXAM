@@ -51,7 +51,7 @@ def check_file(filepath):
                     
                 for term in GENDERED_TERMS:
                     if re.search(term, line, re.IGNORECASE):
-                        # Filter out false positives if needed (e.g. 'hero' contains 'her')
+                        # Filter out false positives if needed (e.g. 'hero' contains substring 'h-e-r')
                         # The regex uses \b boundary, so 'hero' is safe.
                         issues.append((line_num, term, line.strip()))
     except Exception as e:

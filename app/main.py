@@ -320,9 +320,62 @@ class SoulSenseApp:
 
 
 
+    def logout_user(self):
+        """Logout current user and reset to defaults"""
+        logging.info(f"User {self.username} logged out")
+        
+        # Reset State
+        self.current_user_id = None
+        self.username = ""
+        self.age = None
+        self.age_group = None
+        self.profession = None
+        
+        # Reset Settings to Defaults
+        self.settings = {
+            "question_count": 10,
+            "theme": "light",
+            "sound_effects": True
+        }
+        
+        # Apply Defaults
+        self.apply_theme("light")
+        self.reload_questions(10)
+        
+        # Refresh UI
+        self.create_welcome_screen()
+
     def create_welcome_screen(self):
         """Create initial welcome screen with settings option"""
         self.auth.create_welcome_screen()
+        
+        # Top Bar for Auth (Always Visible)
+        top_bar = self.create_widget(tk.Frame, self.root)
+        top_bar.pack(fill="x", padx=20, pady=10)
+        
+        # Login / Logout Button (Top Right)
+        if self.current_user_id:
+            auth_text = "Logout"
+            auth_cmd = self.logout_user
+            auth_bg = "#EF4444" # Red
+            auth_fg = "white"
+        else:
+            auth_text = "Login"
+            auth_cmd = lambda: self.create_username_screen(callback=self.create_welcome_screen)
+            auth_bg = "#3B82F6" # Blue
+            auth_fg = "white"
+            
+        auth_btn = self.create_widget(
+            tk.Button,
+            top_bar,
+            text=auth_text,
+            command=auth_cmd,
+            font=("Arial", 10, "bold"),
+            width=10,
+            bg=auth_bg,
+            fg=auth_fg
+        )
+        auth_btn.pack(side="right")
         
         # Title
         title = self.create_widget(
@@ -331,16 +384,31 @@ class SoulSenseApp:
             text="Welcome to Soul Sense EQ Test",
             font=("Arial", 22, "bold")
         )
-        title.pack(pady=20)
+        title.pack(pady=(0, 20))
         
-        # Description
+        # User Welcome / Description
+        if self.current_user_id:
+            welcome_text = f"Welcome back, {self.username}!"
+            desc_text = "Ready to continue your journey?"
+        else:
+            welcome_text = "Assess your Emotional Intelligence"
+            desc_text = "with our comprehensive questionnaire"
+            
+        welcome_label = self.create_widget(
+            tk.Label,
+            self.root,
+            text=welcome_text,
+            font=("Arial", 14, "bold" if self.current_user_id else "normal")
+        )
+        welcome_label.pack(pady=(10, 5))
+        
         desc = self.create_widget(
             tk.Label,
             self.root,
-            text="Assess your Emotional Intelligence\nwith our comprehensive questionnaire",
+            text=desc_text,
             font=("Arial", 12)
         )
-        desc.pack(pady=10)
+        desc.pack(pady=5)
         
         # Current settings display
         settings_frame = self.create_widget(tk.Frame, self.root)
@@ -369,15 +437,20 @@ class SoulSenseApp:
         button_frame = self.create_widget(tk.Frame, self.root)
         button_frame.pack(pady=20)
         
+        # Start Test Button
+        start_cmd = self.start_test if self.current_user_id else self.create_username_screen
         start_btn = self.create_widget(
             tk.Button,
             button_frame,
             text="Start Test",
-            command=self.create_username_screen,
+            command=start_cmd,
             font=("Arial", 12),
-            width=15
+            width=15,
+            bg="#10B981" if self.current_user_id else None, # Green if ready
+            fg="white" if self.current_user_id else None
         )
         start_btn.pack(pady=5)
+
         
         # Journal Button
         journal_btn = self.create_widget(

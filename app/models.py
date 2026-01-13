@@ -14,6 +14,8 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     created_at = Column(String, default=lambda: datetime.utcnow().isoformat())
     last_login = Column(String, nullable=True)
+    advice_language = Column(String, default='en')
+    advice_tone = Column(String, default='friendly')
 
     scores = relationship("Score", back_populates="user", cascade="all, delete-orphan")
     responses = relationship("Response", back_populates="user", cascade="all, delete-orphan")
@@ -71,6 +73,9 @@ class Question(Base):
     category_id = Column(Integer)
     difficulty = Column(Integer)
     is_active = Column(Integer, default=1)
+    tooltip = Column(Text, nullable=True)
+    min_age = Column(Integer, default=0)
+    max_age = Column(Integer, default=120)
 
 class QuestionCategory(Base):
     __tablename__ = 'question_category'

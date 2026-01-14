@@ -417,57 +417,122 @@ class JournalFeature:
                  bg=self.colors.get("secondary", "#8B5CF6"), fg="white", 
                  relief="flat", padx=10).pack(pady=5)
         
-        # Create scrollable text area
-        text_area = scrolledtext.ScrolledText(entries_window, width=80, height=25, 
-                                            font=("Arial", 10),
-                                            bg=self.colors["surface"],
-                                            fg=self.colors["text_primary"])
-        text_area.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
-        
-        # Fetch entries from database with ORM
-        session = get_session()
-        try:
-            entries = session.query(JournalEntry)\
-                .filter_by(username=self.username)\
-                .order_by(desc(JournalEntry.entry_date))\
-                .all()
-            
-            if not entries:
-                text_area.insert(tk.END, self.i18n.get("journal.no_entries"))
-            else:
-                for entry in entries:
-                    text_area.insert(tk.END, self.i18n.get("journal.entry_date", date=entry.entry_date) + "\n")
-                    text_area.insert(tk.END, self.i18n.get("journal.entry_sentiment", 
-                                                           score=f"{entry.sentiment_score:.1f}", 
-                                                           patterns=entry.emotional_patterns) + "\n")
-                    
-                    # Display metrics if available
-                    if getattr(entry, 'sleep_hours', None) is not None:
-                         metrics_str = self.i18n.get("journal.entry_metrics",
-                                                     sleep_h=entry.sleep_hours,
-                                                     sleep_q=entry.sleep_quality,
-                                                     energy=entry.energy_level,
-                                                     work=entry.work_hours)
-                         text_area.insert(tk.END, metrics_str + "\n")
-                         
-                         # PR #6 Display
-                         if getattr(entry, 'stress_level', None):
-                             text_area.insert(tk.END, f"Metrics: Stress {entry.stress_level}/10 | Screen Time: {entry.screen_time_mins}m\n")
-                         if getattr(entry, 'stress_triggers', None):
-                             text_area.insert(tk.END, f"Triggers: {entry.stress_triggers}\n")
-                         if getattr(entry, 'daily_schedule', None):
-                             text_area.insert(tk.END, f"Schedule: {entry.daily_schedule}\n")
 
-                    text_area.insert(tk.END, self.i18n.get("journal.entry_content", content=entry.content) + "\n")
-                    text_area.insert(tk.END, "-" * 70 + "\n\n")
-        finally:
-            session.close()
+        # Filter Frame
+        filter_frame = tk.Frame(entries_window, bg=self.colors["bg"], pady=10)
+        filter_frame.pack(fill="x", padx=20)
         
-        text_area.config(state=tk.DISABLED)
+        tk.Label(filter_frame, text="🔍 Filter:", bg=self.colors["bg"]).pack(side="left")
         
-        tk.Button(entries_window, text=self.i18n.get("journal.close"), 
-                 command=entries_window.destroy, 
-                 font=("Arial", 12)).pack(pady=10)
+        search_var = tk.StringVar()
+        search_entry = tk.Entry(filter_frame, textvariable=search_var, width=20)
+        search_entry.pack(side="left", padx=5)
+        
+        type_var = tk.StringVar(value="All")
+        type_combo = ttk.Combobox(filter_frame, textvariable=type_var, values=["All", "High Stress (>7)", "Great Days (Energy > 7)", "Bad Sleep (<6h)"], state="readonly")
+        type_combo.pack(side="left", padx=5)
+        
+        # Scrollable Area
+        canvas = tk.Canvas(entries_window, bg=self.colors["bg"], highlightthickness=0)
+        scrollbar = ttk.Scrollbar(entries_window, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.colors["bg"])
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill="both", expand=True, padx=20)
+        scrollbar.pack(side="right", fill="y")
+        
+        def render_entries():
+            # Clear existing
+            for widget in scrollable_frame.winfo_children():
+                widget.destroy()
+                
+            search_term = search_var.get().lower()
+            filter_type = type_var.get()
+            
+            session = get_session()
+            try:
+                entries = session.query(JournalEntry)\
+                    .filter_by(username=self.username)\
+                    .order_by(desc(JournalEntry.entry_date))\
+                    .all()
+                
+                filtered_count = 0
+                for entry in entries:
+                    # Apply Filters
+                    if search_term and search_term not in entry.content.lower():
+                        continue
+                        
+                    if filter_type == "High Stress (>7)" and (entry.stress_level or 0) <= 7:
+                        continue
+                    if filter_type == "Great Days (Energy > 7)" and (entry.energy_level or 0) <= 7:
+                        continue
+                    if filter_type == "Bad Sleep (<6h)" and (entry.sleep_hours or 7) >= 6:
+                        continue
+                        
+                    filtered_count += 1
+                    self._create_entry_card(scrollable_frame, entry)
+                    
+                if filtered_count == 0:
+                    tk.Label(scrollable_frame, text="No entries found matching filters.", 
+                            font=("Segoe UI", 12), bg=self.colors["bg"], fg=self.colors["text_secondary"]).pack(pady=20)
+            finally:
+                session.close()
+
+        # Update on filter change
+        tk.Button(filter_frame, text="Search", command=render_entries, bg=self.colors["primary"], fg="white").pack(side="left", padx=5)
+        type_combo.bind("<<ComboboxSelected>>", lambda e: render_entries())
+        
+        # Initial Render
+        render_entries()
+
+        # Configure canvas width
+        def _configure_canvas(event):
+            canvas.itemconfig(canvas.create_window((0,0), window=scrollable_frame, anchor="nw"), width=event.width)
+        canvas.bind("<Configure>", _configure_canvas)
+
+    def _create_entry_card(self, parent, entry):
+        """Create a styled card for a journal entry"""
+        card = tk.Frame(parent, bg=self.colors["surface"], bd=1, relief="ridge")
+        card.pack(fill="x", pady=5)
+        
+        # Header
+        header = tk.Frame(card, bg=self.colors["surface"])
+        header.pack(fill="x", padx=10, pady=5)
+        
+        stress_icon = "🔴" if (entry.stress_level or 0) > 7 else "🟢"
+        date_str = datetime.strptime(str(entry.entry_date).split('.')[0], "%Y-%m-%d %H:%M:%S").strftime("%b %d, %I:%M %p")
+        
+        tk.Label(header, text=f"{stress_icon} {date_str}", 
+                font=("Segoe UI", 10, "bold"), bg=self.colors["surface"], fg=self.colors["text_primary"]).pack(side="left")
+        
+        score = getattr(entry, 'sentiment_score', 0)
+        mood = "😊" if score > 50 else "😐" if score > -20 else "😔"
+        tk.Label(header, text=mood, font=("Segoe UI", 14), bg=self.colors["surface"]).pack(side="right")
+        
+        # Content Preview
+        preview = entry.content[:150] + "..." if len(entry.content) > 150 else entry.content
+        tk.Label(card, text=preview, font=("Segoe UI", 10), 
+                bg=self.colors["surface"], fg=self.colors["text_primary"], 
+                wraplength=500, justify="left").pack(fill="x", padx=10, pady=5)
+        
+        # Footer Tags
+        footer = tk.Frame(card, bg=self.colors["surface"])
+        footer.pack(fill="x", padx=10, pady=5)
+        
+        def add_tag(text, color):
+            lbl = tk.Label(footer, text=text, font=("Segoe UI", 8), bg=color, fg="white", padx=5, pady=2)
+            lbl.pack(side="left", padx=2)
+            
+        if entry.stress_level: add_tag(f"Stress: {entry.stress_level}", "#EF4444" if entry.stress_level > 7 else "#3B82F6")
+        if entry.sleep_hours: add_tag(f"Sleep: {entry.sleep_hours}h", "#8B5CF6")
+        if entry.screen_time_mins: add_tag(f"Screen: {entry.screen_time_mins//60}h", "#F59E0B")
     
     def open_dashboard(self):
         """Open analytics dashboard with lazy import"""
@@ -505,18 +570,42 @@ class JournalFeature:
             qualities = []
             energies = []
             works = []
+            screens = []
+            stresses = []
             
             for entry in entries:
                 sleeps.append(entry.sleep_hours)
                 qualities.append(entry.sleep_quality)
                 energies.append(entry.energy_level)
                 works.append(entry.work_hours)
+                screens.append(getattr(entry, 'screen_time_mins', None))
+                stresses.append(getattr(entry, 'stress_level', None))
             
-            # Filter out None values
-            sleeps = [s for s in sleeps if s is not None]
-            qualities = [q for q in qualities if q is not None]
-            energies = [e for e in energies if e is not None]
-            works = [w for w in works if w is not None]
+            # 1. Digital Overload (High Screen + High Stress)
+            avg_screen = sum(s for s in screens if s)/len([s for s in screens if s]) if any(screens) else 0
+            avg_stress = sum(s for s in stresses if s)/len([s for s in stresses if s]) if any(stresses) else 0
+            
+            insights = []
+            
+            if avg_screen > 240 and avg_stress > 6:
+                insights.append("⚠️ **Digital Overload**: Your high screen time (>4h) correlates with elevated stress. Try a 'tech-free' hour before bed.")
+                
+            # 2. Burnout Risk (High Work + Low Energy)
+            avg_work = sum(w for w in works if w)/len([w for w in works if w]) if any(works) else 0
+            avg_energy = sum(e for e in energies if e)/len([e for e in energies if e]) if any(energies) else 0
+            
+            if avg_work > 9 and avg_energy < 5:
+                 insights.append("🔥 **Burnout Warning**: You're working long hours while energy is low. Schedule a mandatory break tomorrow.")
+            
+            # 3. Recovery Deficit (Low Sleep)
+            avg_sleep = sum(s for s in sleeps if s)/len([s for s in sleeps if s]) if any(sleeps) else 0
+            if avg_sleep < 6:
+                insights.append("💤 **Sleep Debt**: You're averaging <6 hours. This significantly impacts mood regulation.")
+
+            if insights:
+                return "\n\n".join(insights)
+            else:
+                return "You're balancing well! No major risk factors detected this week."
             
             # Calculate Averages
             avg_sleep = sum(sleeps) / len(sleeps) if sleeps else 0

@@ -422,6 +422,12 @@ class AuthManager:
         
         # Focus on username field
         self.username_entry.focus()
+        
+        # Apply validation limits
+        from app.validation import MAX_USERNAME_LENGTH, MAX_AGE_LENGTH
+        from app.ui.validation_ui import setup_entry_limit
+        setup_entry_limit(self.username_entry, MAX_USERNAME_LENGTH)
+        setup_entry_limit(self.age_entry, MAX_AGE_LENGTH)
 
     def submit_user_info(self) -> None:
         """Validate and submit user info"""

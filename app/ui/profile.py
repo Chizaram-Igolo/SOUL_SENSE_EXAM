@@ -18,6 +18,7 @@ from app.validation import (
     validate_length, validate_required, validate_dob,
     MAX_TEXT_LENGTH, MAX_ENTRY_LENGTH
 )
+from app.ui.validation_ui import setup_entry_limit, setup_text_limit
 
 class UserProfileView:
     def __init__(self, parent_root: tk.Widget, app_instance: Any) -> None:
@@ -1057,12 +1058,15 @@ class UserProfileView:
         # Title Field
         title_var = tk.StringVar(value=event_to_edit['title']) if is_edit else tk.StringVar()
         tk.Label(dialog, text="Event Title", font=("Segoe UI", 10, "bold"), bg=self.colors.get("card_bg"), fg="gray").pack(anchor="w", padx=20, pady=(10, 5))
-        tk.Entry(dialog, textvariable=title_var, font=("Segoe UI", 11)).pack(fill="x", padx=20)
+        title_entry = tk.Entry(dialog, textvariable=title_var, font=("Segoe UI", 11))
+        title_entry.pack(fill="x", padx=20)
+        setup_entry_limit(title_entry, MAX_ENTRY_LENGTH)
         
         # Description Field
         tk.Label(dialog, text="Description", font=("Segoe UI", 10, "bold"), bg=self.colors.get("card_bg"), fg="gray").pack(anchor="w", padx=20, pady=(10, 5))
         desc_text = tk.Text(dialog, height=5, font=("Segoe UI", 11))
         desc_text.pack(fill="x", padx=20)
+        setup_text_limit(desc_text, MAX_TEXT_LENGTH)
         
         if is_edit:
             desc_text.insert("1.0", event_to_edit.get('description', ''))
@@ -1370,11 +1374,6 @@ class UserProfileView:
         tk.Label(parent, text=text, font=("Segoe UI", 10, "bold"), bg=self.colors.get("card_bg"), fg="gray").pack(anchor="w", pady=(10, 5))
         
     def _create_entry(self, parent, variable, max_length=50):
-        def validate(event):
-            val = variable.get()
-            if len(val) > max_length:
-                variable.set(val[:max_length])
-                
         entry = tk.Entry(
             parent, textvariable=variable, font=("Segoe UI", 11), relief="flat", 
             highlightthickness=1, highlightbackground=self.colors.get("card_border"),
@@ -1382,24 +1381,10 @@ class UserProfileView:
             insertbackground=self.colors.get("input_fg", "black") # Caret color
         )
         entry.pack(fill="x", ipady=8) # Taller input
-        entry.bind("<KeyRelease>", validate)
+        setup_entry_limit(entry, max_length)
         return entry
         
     def _create_text_area(self, parent, max_length=1000):
-        def validate(event):
-            val = txt.get("1.0", "end-1c")
-            if len(val) > max_length:
-                # Keep current position
-                # This is a basic truncator, for better UX we might want to block input
-                # But blocking paste is harder, so truncation on release is safest fallback
-                current_insert = txt.index(tk.INSERT)
-                txt.delete("1.0", tk.END)
-                txt.insert("1.0", val[:max_length])
-                try:
-                    txt.mark_set(tk.INSERT, current_insert)
-                except:
-                    pass
-                    
         txt = tk.Text(
             parent, height=4, font=("Segoe UI", 11), relief="flat", 
             highlightthickness=1, highlightbackground=self.colors.get("card_border"),
@@ -1407,7 +1392,7 @@ class UserProfileView:
             insertbackground=self.colors.get("input_fg", "black")
         )
         txt.pack(fill="x", pady=(0, 5))
-        txt.bind("<KeyRelease>", validate)
+        setup_text_limit(txt, max_length)
         return txt
 
     # --- Data Logic ---

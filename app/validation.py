@@ -8,6 +8,8 @@ PHONE_REGEX = r"^\+?[\d\s-]{10,}$"
 # Limits
 MAX_TEXT_LENGTH = 1000  # Bio, Notes
 MAX_ENTRY_LENGTH = 50   # Name, Occupation
+MAX_USERNAME_LENGTH = 30
+MAX_AGE_LENGTH = 3
 # Age Limits
 AGE_MIN = 10
 AGE_MAX = 120

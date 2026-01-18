@@ -82,7 +82,7 @@ def test_delete_user_data(temp_db, monkeypatch):
     session = get_session()
     assert session.query(User).filter_by(id=user_id).first() is None
     assert session.query(Score).filter_by(user_id=user_id).count() == 0
-    assert session.query(JournalEntry).filter_by(user_id=user_id).count() == 0
+    assert session.query(JournalEntry).filter_by(username="testuser").count() == 0
     assert session.query(MedicalProfile).filter_by(user_id=user_id).count() == 0
     assert session.query(PersonalProfile).filter_by(user_id=user_id).count() == 0
     assert session.query(UserSettings).filter_by(user_id=user_id).count() == 0

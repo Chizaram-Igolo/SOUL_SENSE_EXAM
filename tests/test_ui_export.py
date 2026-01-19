@@ -1,6 +1,6 @@
-
 import pytest
 import tkinter as tk
+import tkinter.filedialog
 from unittest.mock import MagicMock, patch, ANY
 from app.ui.profile import UserProfileView
 from app.ui.results import ResultsManager
@@ -40,7 +40,7 @@ class TestUIExportSecurity:
     @patch("builtins.open", new_callable=MagicMock)
     @patch("json.dump")
     @patch("app.utils.file_validation.validate_file_path")
-    def test_profile_export_success(self, mock_validate, mock_json, mock_open, mock_msg, mock_dialog, profile_view):
+    def test_profile_export_success(self, mock_dialog, mock_msg, mock_open, mock_json, mock_validate, profile_view):
         """Test successful export flow in Profile UI"""
         # Setup mocks
         mock_dialog.return_value = "C:/Users/test/Documents/export.json"
@@ -50,25 +50,17 @@ class TestUIExportSecurity:
         profile_view._render_export_view()
         pass 
 
-    @patch("tkinter.filedialog.asksaveasfilename")
+    @patch("tkinter.filedialog.asksaveasfilename", return_value="C:/safe/report.pdf")
     @patch("app.utils.file_validation.validate_file_path")
     @patch("app.ui.results.generate_pdf_report")
     @patch("app.ui.results.messagebox")
     def test_results_pdf_export_security(self, mock_msg, mock_gen, mock_validate, mock_dialog, results_manager):
         """Test validation is called during PDF export"""
         # Case 1: Success
-        mock_dialog.return_value = "C:/safe/report.pdf"
+        # Note: return_value set in decorator
         mock_validate.return_value = "C:/safe/report.pdf"
         
-        # Ensure the mock is callable and returns the value
-        # This handles cases where askopenfilename is replaced by a Mock object directly
-        # vs. replaced by a MagicMock that needs .return_value
-        
         results_manager.export_results_pdf()
-        
-        # Verify validate called with whatever ask_save returned
-        # If it failed to return string,validate_file_path would get a MagicMock
-        assert isinstance(mock_dialog.return_value, str), "Mock configuration error: return_value is not a string"
         
         mock_validate.assert_called_with("C:/safe/report.pdf", allowed_extensions=[".pdf"])
         mock_gen.assert_called()
@@ -82,8 +74,16 @@ class TestUIExportSecurity:
         
         # msg.showerror called with "Security Error" and something containing "Invalid extension"
         assert mock_msg.showerror.called
+        
+        # Reset mock_msg for the next call
+        mock_msg.reset_mock()
+        mock_dialog.return_value = "C:/unsafe/report.exe" # Explicitly set return_value again for clarity
+        
+        results_manager.export_results_pdf()
+        
+        # msg.showerror called with "Security Error" and something containing "Invalid extension"
+        assert mock_msg.showerror.called
         args = mock_msg.showerror.call_args
         assert args[0][0] == "Security Error"
         assert "Invalid extension" in str(args[0][1])
         mock_gen.assert_not_called()
-

@@ -268,6 +268,8 @@ class JournalFeature:
     
     def save_and_analyze(self):
         """Save journal entry and perform AI analysis"""
+        from app.ui.components.loading_overlay import show_loading, hide_loading
+        
         content = sanitize_text(self.text_area.get("1.0", tk.END))
         
         # Validation checks
@@ -298,13 +300,10 @@ class JournalFeature:
                  messagebox.showwarning("Validation Error", f"Invalid value for {lbl}")
                  return
         
-        # Perform analysis
-        sentiment_score = self.analyze_sentiment(content)
-        emotional_patterns = self.extract_emotional_patterns(content)
-        if not content:
-            messagebox.showwarning("Empty Entry", "Please write something before saving.")
+        # Guard
+        if hasattr(self, 'is_processing') and self.is_processing:
             return
-            
+
         # Start Processing
         self.is_processing = True
         

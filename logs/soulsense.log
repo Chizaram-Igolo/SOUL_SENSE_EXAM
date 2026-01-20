@@ -602,3 +602,60 @@ sqlite3.OperationalError: no such column: sentiment_score
 2026-01-09 20:21:44,461 - root - INFO - Using 10 questions based on settings
 2026-01-09 20:23:20,676 - root - INFO - Session started | user=rohan | age=20 | age_group=adult | profession=Student | questions=10
 2026-01-09 20:24:36,882 - root - INFO - Session started | user=rohan | age=20 | age_group=adult | profession=Student | questions=10
+2026-01-20 11:35:07,045 - root - INFO - Logging initialized.
+2026-01-20 11:35:07,045 - root - INFO - Application started
+2026-01-20 11:35:07,074 - app.questions - ERROR - Failed to load questions: Failed to fetch questions from DB.
+2026-01-20 11:35:07,074 - root - ERROR - Fatal Error: Question bank could not be loaded.
+The application cannot start. | Error: Failed to fetch questions from DB.
+Traceback (most recent call last):
+  File "c:\Users\DELL\OneDrive\Documents\GitHub\SOUL_SENSE_EXAM\app\questions.py", line 130, in _get_cached_questions_from_db
+    Question.tooltip,
+    ^^^^^^^^^^^^^^^^
+AttributeError: type object 'Question' has no attribute 'tooltip'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\DELL\OneDrive\Documents\GitHub\SOUL_SENSE_EXAM\app\main.py", line 170, in <module>
+    rows = load_questions()  # [(id, text, tooltip, min_age, max_age)]
+  File "c:\Users\DELL\OneDrive\Documents\GitHub\SOUL_SENSE_EXAM\app\questions.py", line 272, in load_questions
+    questions = _get_cached_questions_from_db(age)
+  File "c:\Users\DELL\OneDrive\Documents\GitHub\SOUL_SENSE_EXAM\app\questions.py", line 147, in _get_cached_questions_from_db
+    raise DatabaseError("Failed to fetch questions from DB.", original_exception=e)
+app.exceptions.DatabaseError: Failed to fetch questions from DB.
+2026-01-20 11:35:42,264 - root - INFO - Logging initialized.
+2026-01-20 11:35:42,264 - root - INFO - Application started
+2026-01-20 11:35:42,265 - root - INFO - Loaded 10 total questions from DB
+2026-01-20 11:35:44,473 - ml_predictor - INFO - No existing model found: [Errno 2] No such file or directory: 'soulsense_ml_model.pkl'
+2026-01-20 11:35:44,474 - root - ERROR - Failed to initialize ML Predictor: 'charmap' codec can't encode character '\U0001f504' in position 0: character maps to <undefined>
+2026-01-20 11:35:44,492 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-20 11:35:44,492 - root - INFO - Using 10 questions based on settings
+2026-01-20 11:36:47,335 - root - INFO - Logging initialized.
+2026-01-20 11:36:47,335 - root - INFO - Application started
+2026-01-20 11:36:47,337 - root - INFO - Loaded 10 total questions from DB
+2026-01-20 11:36:49,554 - ml_predictor - INFO - No existing model found: [Errno 2] No such file or directory: 'soulsense_ml_model.pkl'
+2026-01-20 11:36:49,554 - ml_predictor - INFO - Training new ML model...
+2026-01-20 11:36:49,556 - model_versioning - INFO - 🧪 Started experiment: soulsense_training (ID: exp_d7febde6f8bc)
+2026-01-20 11:36:49,840 - ml_predictor - INFO - Model trained successfully! Train: 100.00%, Test: 99.00%
+2026-01-20 11:36:49,847 - ml_predictor - INFO - Classification Report:
+               precision    recall  f1-score   support
+
+     Low Risk       0.99      1.00      0.99        87
+Moderate Risk       0.99      0.99      0.99        97
+    High Risk       1.00      0.94      0.97        16
+
+     accuracy                           0.99       200
+    macro avg       0.99      0.98      0.98       200
+ weighted avg       0.99      0.99      0.99       200
+
+2026-01-20 11:36:49,848 - model_versioning - INFO - 📊 Logged metrics for experiment exp_d7febde6f8bc: {'train_accuracy': 1.0, 'test_accuracy': 0.99, 'f1_score': 0.9899336405529954, 'precision': 0.9900568181818181, 'recall': 0.99}
+2026-01-20 11:36:49,850 - model_versioning - INFO - 📦 Saved artifact: classification_report.txt
+2026-01-20 11:36:49,851 - ml_predictor - INFO - Metrics saved to model_metrics.txt
+2026-01-20 11:36:50,102 - ml_predictor - INFO - Confusion matrix saved to confusion_matrix.png
+2026-01-20 11:36:50,124 - model_versioning - INFO - ✅ Registered model: soulsense_predictor v1.0.0 (ID: soulsense_predictor_v1.0.0_a4cf163d)
+2026-01-20 11:36:50,125 - model_versioning - INFO - ✅ Completed experiment: exp_d7febde6f8bc
+2026-01-20 11:36:50,125 - ml_predictor - INFO - ML model registered as v1.0.0
+2026-01-20 11:36:50,133 - ml_predictor - INFO - ML model saved to soulsense_ml_model.pkl
+2026-01-20 11:36:50,133 - root - INFO - ML Predictor initialized successfully
+2026-01-20 11:36:50,154 - root - INFO - SentimentIntensityAnalyzer initialized successfully
+2026-01-20 11:36:50,154 - root - INFO - Using 10 questions based on settings

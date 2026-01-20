@@ -23,6 +23,7 @@ from app.error_handler import (
     ErrorSeverity,
 )
 from typing import Optional, Dict, Any, List
+from app.db import get_session
 
 class SoulSenseApp:
     def __init__(self, root: tk.Tk) -> None:
@@ -431,7 +432,10 @@ class SoulSenseApp:
 
         try:
             # Commit any pending database operations
-            from app.db import get_session
+            # Commit any pending database operations
+            # Session handling is tricky at shutdown. 
+            # Ideally services handle their own sessions.
+            # But if we need a global commit:
             session = get_session()
             if session:
                 session.commit()

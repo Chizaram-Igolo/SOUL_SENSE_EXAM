@@ -11,8 +11,9 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from sqlalchemy import desc, text
 
 from app.i18n_manager import get_i18n
-from app.models import JournalEntry, User, UserEmotionalPatterns
-from app.db import safe_db_context
+from app.i18n_manager import get_i18n
+from app.models import JournalEntry
+from app.services.journal_service import JournalService
 from app.validation import validate_required, validate_length, validate_range, sanitize_text, RANGES
 from app.validation import MAX_TEXT_LENGTH
 
@@ -340,16 +341,29 @@ class JournalFeature:
                     # Continue saving even if analysis fails slightly
             
             # 2. Database Save
-            with safe_db_context() as session:
-                entry = JournalEntry(
+            # 2. Database Save (via Service)
+            try:
+                # Collect metrics from sliders
+                metrics = {
+                    "sleep_hours": self.sleep_hours_var.get(),
+                    "sleep_quality": self.sleep_quality_var.get(),
+                    "energy_level": self.energy_level_var.get(),
+                    "stress_level": self.stress_level_var.get(),
+                    "work_hours": self.work_hours_var.get(),
+                    "screen_time_mins": self.screen_time_var.get()
+                }
+                
+                JournalService.create_entry(
                     username=self.username if hasattr(self, 'username') else (self.app.username if self.app and hasattr(self.app, 'username') else 'guest'),
                     content=content,
                     sentiment_score=sentiment_score,
+                    emotional_patterns=emotional_patterns,
                     entry_date=current_time.strftime("%Y-%m-%d %H:%M:%S"),
-                    emotional_patterns=emotional_patterns
+                    **metrics
                 )
-                session.add(entry)
-                # Commit handled by context manager
+            except Exception as e:
+                logging.error(f"Service save failed: {e}")
+                raise e # Re-raise to trigger outer error handler
             
             # 3. Dynamic Health Insights
             health_insights = self.generate_health_insights()
@@ -568,11 +582,9 @@ class JournalFeature:
             filter_type = type_var.get()
             
             # Using safe_db_context for read operations too
-            with safe_db_context() as session:
-                entries = session.query(JournalEntry)\
-                    .filter_by(username=self.username)\
-                    .order_by(desc(JournalEntry.entry_date))\
-                    .all()
+            # Using JournalService for read operations
+            try:
+                entries = JournalService.get_entries(self.username)
                 print(f"DEBUG: View Past Entries found {len(entries)} records for {self.username}")
                 
                 filtered_count = 0
@@ -597,10 +609,15 @@ class JournalFeature:
                     filtered_count += 1
                     self._create_entry_card(scrollable_frame, entry)
                     
-                if filtered_count == 0:
-                    tk.Label(scrollable_frame, text="No entries found matching filters.", 
-                            font=("Segoe UI", 12), bg=self.colors.get("bg", "#f0f0f0"), 
-                            fg=self.colors.get("text_secondary", "#666")).pack(pady=20)
+                    if filtered_count == 0:
+                        tk.Label(scrollable_frame, text="No entries found matching filters.", 
+                                font=("Segoe UI", 12), bg=self.colors.get("bg", "#f0f0f0"), 
+                                fg=self.colors.get("text_secondary", "#666")).pack(pady=20)
+            except Exception as e:
+                logging.error(f"Failed to render entries: {e}")
+                tk.Label(scrollable_frame, text="Could not load entries.", 
+                        font=("Segoe UI", 12), bg=self.colors.get("bg", "#f0f0f0"), 
+                        fg="red").pack(pady=20)
 
         # Update on filter change
         month_combo.bind("<<ComboboxSelected>>", lambda e: render_entries())
@@ -738,21 +755,13 @@ class JournalFeature:
     # ========== HEALTH INSIGHTS & NUDGES ==========
     def generate_health_insights(self):
         """Check for recent trends and return comprehensive health insights"""
-        """Check for recent trends and return comprehensive health insights"""
+        insight_text = "Not enough data for insights yet."
         try:
-            with safe_db_context() as session:
-                # Query last 3 days
-                three_days_ago = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
-                
-                # Use SQLAlchemy query instead of raw SQL for better compatibility
-                entries = session.query(JournalEntry)\
-                    .filter(JournalEntry.username == self.username)\
-                    .filter(JournalEntry.entry_date >= three_days_ago)\
-                    .order_by(JournalEntry.entry_date.desc())\
-                    .all()
-                
-                if not entries:
-                    return "Start tracking your sleep and energy to get personalized health insights!"
+            # Query last 3 days via Service
+            entries = JournalService.get_recent_entries(self.username, days=3)
+            
+            if not entries:
+                return "Start tracking your sleep and energy to get personalized health insights!"
                 
                 # Data extraction
                 sleeps = []

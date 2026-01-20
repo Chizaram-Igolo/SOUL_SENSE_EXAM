@@ -9,7 +9,6 @@ import logging
 import time
 from datetime import datetime
 import statistics
-from app.db import get_connection
 from app.utils import compute_age_group
 from app.services.question_curator import QuestionCurator
 from app.ui.assessments import RecommendationView
@@ -669,25 +668,15 @@ class ExamManager:
 
         # --- NEW SECTION: Deep Dive Results (if any) ---
         try:
-            conn = get_connection()
-            cursor = conn.cursor()
+            from app.services.exam_service import ExamService
             
             deep_dives = []
             if self.app.current_user_id:
-                if result_ids and len(result_ids) > 0:
-                     # Precise filtering by IDs (The robust way)
-                     placeholders = ','.join(['?'] * len(result_ids))
-                     query = f"SELECT assessment_type, total_score, details FROM assessment_results WHERE id IN ({placeholders}) ORDER BY timestamp DESC"
-                     cursor.execute(query, result_ids)
-                     deep_dives = cursor.fetchall()
-                else:
-                    # Fallback: 15 minutes lookback (Legacy/Direct access way)
-                    time_threshold = datetime.now().timestamp() - 900 
-                    cursor.execute(
-                        "SELECT assessment_type, total_score, details FROM assessment_results WHERE user_id = ? AND timestamp > ? ORDER BY timestamp DESC",
-                        (self.app.current_user_id, str(datetime.fromtimestamp(time_threshold)))
-                    )
-                    deep_dives = cursor.fetchall()
+                deep_dives = ExamService.get_assessment_results(
+                    user_id=self.app.current_user_id,
+                    result_ids=result_ids,
+                    minutes_lookback=15
+                )
                 
                 if deep_dives:
                     dd_section = tk.Frame(container, bg=colors["bg"])
@@ -699,17 +688,17 @@ class ExamManager:
                     grid_frame = tk.Frame(dd_section, bg=colors["bg"])
                     grid_frame.pack(fill="x")
                     
-                    for i, (dtype, dscore, ddetails) in enumerate(deep_dives):
+                    for i, result in enumerate(deep_dives):
                         # Simple card for each
                         card = tk.Frame(grid_frame, bg=colors["surface"], padx=15, pady=15,
                                       highlightthickness=1, highlightbackground=colors.get("border", "#E2E8F0"))
                         card.pack(side="left", fill="x", expand=True, padx=5)
                         
-                        d_name = dtype.replace("_", " ").title()
+                        d_name = result.assessment_type.replace("_", " ").title()
                         tk.Label(card, text=d_name, font=("Segoe UI", 12, "bold"), 
                                  bg=colors["surface"], fg=colors["text_primary"]).pack(anchor="w")
                                  
-                        tk.Label(card, text=f"Score: {dscore}/100", font=("Segoe UI", 16, "bold"), 
+                        tk.Label(card, text=f"Score: {result.total_score}/100", font=("Segoe UI", 16, "bold"), 
                                  bg=colors["surface"], fg=colors["primary"]).pack(anchor="w", pady=5)
         except Exception as e:
             logging.error(f"Failed to load specific deep dives: {e}")

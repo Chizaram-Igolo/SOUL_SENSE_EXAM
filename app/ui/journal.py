@@ -345,8 +345,7 @@ class JournalFeature:
                     username=self.username if hasattr(self, 'username') else (self.app.username if self.app and hasattr(self.app, 'username') else 'guest'),
                     content=content,
                     sentiment_score=sentiment_score,
-                    mood=self._app_mood_from_score(sentiment_score),
-                    created_at=current_time,
+                    entry_date=current_time.strftime("%Y-%m-%d %H:%M:%S"),
                     emotional_patterns=emotional_patterns
                 )
                 session.add(entry)
@@ -368,8 +367,7 @@ class JournalFeature:
             if hasattr(self, 'word_count_label'):
                 self.word_count_label.config(text="0 words")
                 
-            # Refresh List
-            self.load_entries()
+                # self.load_entries() # Method does not exist, and view_past_entries is a separate window
             
         except Exception as e:
             logging.error("Failed to save journal entry", exc_info=True)

@@ -5,7 +5,7 @@ import os
 import sys
 
 # Add the parent directory to sys.path to allow imports from app
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from app.auth import AuthManager
 from app.config import DB_PATH

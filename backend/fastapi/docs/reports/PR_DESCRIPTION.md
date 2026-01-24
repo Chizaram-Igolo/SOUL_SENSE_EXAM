@@ -2,7 +2,6 @@
 
 ## 📋 Issue
 
-Closes #392
 
 ## 🎯 Overview
 

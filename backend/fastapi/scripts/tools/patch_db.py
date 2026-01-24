@@ -2,7 +2,7 @@
 import sqlite3
 import os
 
-db_path = "../../data/soulsense.db"
+db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../../data/soulsense.db"))
 
 def patch_db():
     if not os.path.exists(db_path):

@@ -3,6 +3,8 @@ Simple test script to demonstrate the version command feature
 This can be run without database setup to show the version functionality
 """
 import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 def test_cli_version_arg():
     """Test --version command line argument"""

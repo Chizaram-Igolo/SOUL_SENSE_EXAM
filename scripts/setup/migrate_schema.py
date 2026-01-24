@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB_PATH = os.path.join("data", "soulsense.db")
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/soulsense.db"))
 if not os.path.exists(DB_PATH):
     print(f"Database {DB_PATH} not found. Skipped.")
     exit(0)

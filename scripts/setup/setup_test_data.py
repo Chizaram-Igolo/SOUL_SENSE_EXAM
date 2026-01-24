@@ -1,6 +1,7 @@
 """Create tables and sample data"""
 import sys
-sys.path.insert(0, '.')
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 from app.db import check_db_state
 from app.db import safe_db_context
 from app.models import Score

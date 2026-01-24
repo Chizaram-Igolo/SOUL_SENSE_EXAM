@@ -3,7 +3,13 @@
 ## Quick Start
 
 1. **Import Collection**: File → Import → `SoulSense_API_v1.postman_collection.json`
+
+![alt text](image.png)
+
 2. **Import Environment**: File → Import → `SoulSense_API_v1.postman_environment.json`
+
+Copy - Paste Json code 
+
 3. **Select Environment**: Choose "SoulSense API v1" from dropdown (top-right)
 4. **Start Server**: Run `python backend/fastapi/start_server.py`
 

@@ -10,6 +10,7 @@ Usage:
 """
 import requests
 import json
+import pytest
 from typing import Dict, Any, Optional
 
 BASE_URL = "http://127.0.0.1:8000"
@@ -29,10 +30,14 @@ def print_response(endpoint: str, response: requests.Response):
         print(f"Response: {response.text}")
 
 
-def get_auth_token(username: str = "sync_test_user", password: str = "testpass123") -> Optional[str]:
+@pytest.fixture(scope="module")
+def token():
     """Register and login to get auth token."""
+    username = "sync_test_user"
+    password = "testpass123"
+    
     # Try to register first
-    register_response = requests.post(
+    requests.post(
         f"{BASE_URL}/auth/register",
         json={"username": username, "password": password}
     )
@@ -47,8 +52,7 @@ def get_auth_token(username: str = "sync_test_user", password: str = "testpass12
         token_data = login_response.json()
         return token_data.get("access_token")
     else:
-        print(f"Failed to get auth token: {login_response.text}")
-        return None
+        pytest.fail(f"Failed to get auth token: {login_response.text}")
 
 
 def test_health():

@@ -3,6 +3,10 @@ name: Check PR Description Quality
 on:
   pull_request:
     types: [opened, edited]
+    branches:
+      - main
+      - develop
+      - master
 
 permissions:
   pull-requests: write

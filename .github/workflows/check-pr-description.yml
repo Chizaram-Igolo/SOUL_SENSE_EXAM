@@ -53,22 +53,29 @@ jobs:
               return;
             }
 
-            const errorMessage = "PR description needs improvement:\n" + issues.map(i => `- ${i}`).join("\n");
+            const feedback =
+              "PR description needs improvement:\n\n" +
+              issues.map(i => `- ${i}`).join("\n") +
+              "\n\nPlease update the description.";
 
             if (isFork) {
-              console.log("Fork detected. Skipping comment creation to avoid 403 error.");
-              core.warning(errorMessage);
-              console.log("Issues logged as warnings. Workflow passing for fork.");
-            } else {
-              try {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  body: errorMessage + "\n\nPlease update the description.",
-                });
-              } catch (error) {
-                console.log("Warning: Failed to post comment:", error.message);
+              core.warning("Fork detected. Skipping comment creation to avoid 403 error.\n\n" + feedback);
+              return;
+            }
+
+            try {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: feedback,
+              });
+              core.setFailed("PR description validation failed. Please check the comment for details.");
+            } catch (error) {
+              core.error(`Failed to create comment: ${error.message}`);
+              if (error.status === 403) {
+                core.warning("Received 403 Forbidden. This usually happens on PRs from forks where the token has read-only access.");
+              } else {
+                core.setFailed(`An error occurred: ${error.message}`);
               }
-              core.setFailed(errorMessage);
             }

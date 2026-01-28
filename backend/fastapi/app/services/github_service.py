@@ -205,13 +205,22 @@ class GitHubService:
                 except Exception:
                     continue
             
-            # Return sorted weeks
-            activity = sorted(weeks_map.values(), key=lambda x: x['week'])
+            # Ensure we have at least 12 weeks for a good look
+            if activity:
+                first_active_week = activity[0]['week']
+                one_week = 7 * 24 * 3600
+                padded = []
+                # Add up to 11 weeks of leading zeros for a nice trend slope
+                for i in range(11, 0, -1):
+                    padded.append({
+                        "total": 0, 
+                        "week": first_active_week - (i * one_week), 
+                        "days": [0]*7
+                    })
+                activity = padded + activity
             
-            # Ensure we have at least 12 weeks for a good look, padding with zeros if needed
-            # (Or just return what we have)
             return activity
-            
+        
         return data
 
     async def get_contribution_mix(self) -> List[Dict[str, Any]]:

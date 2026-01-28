@@ -26,10 +26,18 @@ export function ActivityAreaChart({ data }: { data: any[] }) {
   const lastActiveIndex =
     lastActiveIndexFromEnd !== -1 ? chartData.length - lastActiveIndexFromEnd : chartData.length;
 
-  const focusedData = chartData.slice(0, lastActiveIndex).filter((d) => d.date >= START_DATE);
+  let focusedData = chartData.slice(0, lastActiveIndex).filter((d) => d.date >= START_DATE);
+
+  // If we only have one data point, pad it with a zero-start to ensure Area rendering
+  if (focusedData.length === 1) {
+    const firstDate = new Date(focusedData[0].date);
+    const prevDate = new Date(firstDate);
+    prevDate.setDate(prevDate.getDate() - 7);
+    focusedData = [{ date: prevDate.toISOString().split('T')[0], commits: 0 }, ...focusedData];
+  }
 
   return (
-    <Card className="h-full backdrop-blur-xl bg-opacity-60 dark:bg-black/60 border-white/20 shadow-xl rounded-2xl overflow-hidden">
+    <Card className="h-full backdrop-blur-xl bg-white/60 dark:bg-slate-900/60 border-white/20 shadow-xl rounded-2xl overflow-hidden">
       <CardHeader>
         <CardTitle className="text-xl font-bold">Engineering Velocity</CardTitle>
         <CardDescription>

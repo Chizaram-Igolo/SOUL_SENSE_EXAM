@@ -124,6 +124,7 @@ class ModelRegistry:
         Args:
             registry_path (str, optional): Path to registry directory. If None, uses default.
         """
+        self.registry_path = Path(registry_path or os.path.join(MODELS_DIR, "registry"))
         self.models_path = self.registry_path / "models"
         self.metadata_file = self.registry_path / "registry.json"
         
@@ -861,6 +862,7 @@ class ModelVersioningManager:
             registry_path (str, optional): Path to model registry. Defaults to None.
             experiments_path (str, optional): Path to experiments. Defaults to None.
         """
+        self.registry = ModelRegistry(registry_path)
         self.tracker = ExperimentTracker(experiments_path)
         self._current_experiment: Optional[str] = None
         self._experiment_start_time: Optional[datetime] = None

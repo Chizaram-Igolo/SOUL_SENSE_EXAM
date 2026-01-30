@@ -1,60 +1,36 @@
-# Daily Journaling with Sentiment Analysis Enhancement
-
-## Overview
-Enhance the existing journaling feature to provide a complete EQ tracking experience with real-time sentiment analysis, emotional pattern detection, and data visualization.
+# AI-Powered EQ Insights Integration TODO
 
 ## Current Status
-- ✅ Journaling UI module exists (app/ui/journal.py)
-- ✅ NLTK VADER sentiment analysis implemented
-- ✅ Database storage with JournalEntry model
-- ✅ Matplotlib integration for mood trends
-- ✅ Navigation from quiz results to journal view added
-- ✅ Unit tests for sentiment analysis and database storage created
+- [x] Plan confirmed by user
+- [x] Create Insights Engine (app/ml/insights_generator.py)
+- [ ] Enhance Results Screen (app/ui/results.py)
+- [ ] Integrate with Existing ML (app/ml/predictor.py)
+- [ ] Add User Feedback Loop
+- [ ] Create Tests (tests/test_insights.py)
+- [ ] Train ML model on historical scores data
+- [ ] Test integration end-to-end
+- [ ] Implement feedback storage and refinement logic
 
-## Completed Tasks
-1. **Navigation Enhancement**: Added "Daily Journal" button to quiz results screen
-2. **Sentiment Analysis**: Real-time analysis using NLTK VADER with positive/negative/neutral classification
-3. **Emotional Pattern Detection**: Automatic detection of stress, growth, social, and reflection patterns
-4. **Data Visualization**: Mood trend charts using matplotlib
-5. **Database Integration**: Comprehensive storage of journal entries with metadata
-6. **Unit Tests**: Comprehensive test suite for sentiment analysis and database operations
+## Implementation Details
 
-## Key Features Implemented
-- **Real-time Sentiment Scoring**: -100 to +100 scale using VADER
-- **Emotional Pattern Recognition**: Keywords-based pattern detection
-- **Daily Metrics Tracking**: Sleep, energy, stress, work hours, screen time
-- **Tagging System**: User-defined tags for journal entries
-- **Advanced Filtering**: Search by tags, date range, mood, and type
-- **Mood Trend Visualization**: Charts showing emotional patterns over time
-- **Health Insights**: AI-generated recommendations based on journal patterns
+### 1. Create Insights Engine (app/ml/insights_generator.py)
+- [ ] Analyze user data for trends using scikit-learn
+- [ ] Generate personalized improvement suggestions based on scores, strengths, and patterns
+- [ ] Train a simple ML model (regression) to predict EQ improvement paths
 
-## Technical Implementation
-- **UI**: Tkinter-based journaling interface with modern design
-- **Analysis**: NLTK VADER for sentiment, custom pattern matching
-- **Storage**: SQLAlchemy ORM with JournalEntry model
-- **Visualization**: Matplotlib integration for trend charts
-- **Testing**: Pytest suite with mocking for database operations
+### 2. Enhance Results Screen (app/ui/results.py)
+- [ ] Add insights display section showing personalized recommendations
+- [ ] Integrate with existing ML analysis
+- [ ] Show next steps and actionable advice
 
-## User Experience
-- **Seamless Integration**: Direct navigation from assessment results
-- **Intuitive Interface**: Text editor with real-time analysis feedback
-- **Comprehensive Tracking**: Multiple metrics for holistic wellbeing
-- **Insightful Analytics**: Visual trends and AI-powered recommendations
+### 3. Integrate with Existing ML (app/ml/predictor.py)
+- [ ] Extend predictor to include insights generation
+- [ ] Ensure consistency with current ML pipeline
 
-## Result
-Users now have a complete EQ tracking experience with:
-- Daily emotional reflection capabilities
-- Real-time sentiment analysis feedback
-- Longitudinal emotional pattern tracking
-- Data-driven insights for personal development
-- Enhanced self-awareness through journaling
+### 4. Add User Feedback Loop
+- [ ] Add feedback collection in results screen
+- [ ] Store feedback to refine recommendations over time
 
-## Future Enhancements (Not in Scope)
-- AI-generated journaling prompts
-- Integration with wearable devices
-- Advanced ML models for deeper emotional analysis
-- Social features for sharing insights
-- Mobile app companion
-
----
-*Status: All requested enhancements completed and tested*
+### 5. Create Tests (tests/test_insights.py)
+- [ ] Test insight accuracy and edge cases
+- [ ] Validate ML model predictions

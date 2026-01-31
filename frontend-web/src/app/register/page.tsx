@@ -1,49 +1,104 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Form } from '@/components/forms';
-import { FormField } from '@/components/forms';
-import { Button } from '@/components/ui';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Form, FormField } from '@/components/forms';
+import { Button, Input } from '@/components/ui';
+import { AuthLayout, SocialLogin, PasswordStrengthIndicator } from '@/components/auth';
+import { registrationSchema } from '@/lib/validation';
 import { z } from 'zod';
 
-const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+type RegisterFormData = z.infer<typeof registrationSchema>;
 
-type RegisterFormData = z.infer<typeof registerSchema>;
-
-export default function Register() {
+export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (data: RegisterFormData) => {
-    // TODO: Implement registration logic
+    setIsLoading(true);
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     console.log('Register data:', data);
+    setIsLoading(false);
+    // TODO: Implement actual registration logic
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-center mb-6">Register</h1>
-        <Form schema={registerSchema} onSubmit={handleSubmit}>
-          {(methods) => (
-            <>
+    <AuthLayout
+      title="Create an account"
+      subtitle="Start your emotional intelligence journey today"
+    >
+      <Form schema={registrationSchema} onSubmit={handleSubmit} className="space-y-4">
+        {(methods) => (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <FormField
+                  control={methods.control}
+                  name="firstName"
+                  label="First name"
+                  placeholder="John"
+                  required
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <FormField
+                  control={methods.control}
+                  name="lastName"
+                  label="Last name"
+                  placeholder="Doe"
+                />
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <FormField
+                control={methods.control}
+                name="username"
+                label="Username"
+                placeholder="johndoe"
+                required
+              />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
               <FormField
                 control={methods.control}
                 name="email"
                 label="Email"
-                placeholder="Enter your email"
+                placeholder="you@example.com"
+                type="email"
                 required
               />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.35 }}
+            >
               <FormField
                 control={methods.control}
                 name="password"
                 label="Password"
-                placeholder="Enter your password"
                 required
               >
                 {(fieldProps) => (
@@ -54,11 +109,17 @@ export default function Register() {
                   />
                 )}
               </FormField>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
               <FormField
                 control={methods.control}
                 name="confirmPassword"
-                label="Confirm Password"
-                placeholder="Confirm your password"
+                label="Confirm password"
                 required
               >
                 {(fieldProps) => (
@@ -83,10 +144,33 @@ export default function Register() {
               <Button type="submit" className="w-full">
                 Register
               </Button>
-            </>
-          )}
-        </Form>
-      </div>
-    </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.55 }}
+            >
+              <SocialLogin isLoading={isLoading} />
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-center text-sm text-muted-foreground"
+            >
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                Sign in
+              </Link>
+            </motion.p>
+          </>
+        )}
+      </Form>
+    </AuthLayout>
   );
 }

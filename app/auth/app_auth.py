@@ -72,7 +72,7 @@ class AppAuth:
                                          bg=self.app.colors["bg"], fg=self.app.colors["text_primary"])
         show_password_cb.pack(anchor="w", pady=(0, 10))
 
-        def do_login():
+        def do_login(event=None):
             user = username_entry.get().strip()
             pwd = password_entry.get().strip()
 
@@ -89,6 +89,12 @@ class AppAuth:
             else:
                 tk.messagebox.showerror("Login Failed", msg)
 
+        # Added this function for the Esc key
+        def clear_fields(event=None):
+            username_entry.delete(0, tk.END)
+            password_entry.delete(0, tk.END)
+            username_entry.focus_set()        
+
         def do_register():
             self.show_signup_screen()
 
@@ -100,6 +106,9 @@ class AppAuth:
         tk.Button(login_win, text="Create Account", command=do_register,
                  font=("Segoe UI", 10), bg=self.app.colors["bg"], fg=self.app.colors["primary"],
                  bd=0, cursor="hand2").pack()
+        # --- BIND KEYS TO ACTIONS ---
+        login_win.bind('<Return>', do_login)   # Enter Key -> Logs in
+        login_win.bind('<Escape>', clear_fields) # Esc Key -> Clears text
 
     def show_signup_screen(self):
         """Show signup popup window"""

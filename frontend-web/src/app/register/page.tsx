@@ -9,6 +9,7 @@ import { Button, Input } from '@/components/ui';
 import { AuthLayout, SocialLogin, PasswordStrengthIndicator } from '@/components/auth';
 import { registrationSchema } from '@/lib/validation';
 import { z } from 'zod';
+import { UseFormReturn } from 'react-hook-form';
 
 type RegisterFormData = z.infer<typeof registrationSchema>;
 
@@ -16,7 +17,9 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (data: RegisterFormData) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (data: RegisterFormData, methods: UseFormReturn<RegisterFormData>) => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -25,6 +28,47 @@ export default function RegisterPage() {
       // TODO: Implement actual registration logic
     } catch (error) {
       console.error('Registration error:', error);
+      const response = await fetch('http://localhost:8000/api/v1/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: data.username,
+          password: data.password,
+          email: data.email,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          age: data.age,
+          gender: data.gender,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const code = errorData.detail?.code;
+
+        // Map backend ErrorCodes to specific form fields
+        if (code === 'REG001') {
+          methods.setError('username', { message: 'Username already taken' });
+          return;
+        }
+        if (code === 'REG002') {
+          methods.setError('email', { message: 'Email already registered' });
+          return;
+        }
+
+        const errorMessage = errorData.detail?.message || errorData.detail || 'Registration failed';
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('Registration successful:', result);
+      window.location.href = '/login?registered=true';
+    } catch (error) {
+      console.error('Registration error:', error);
+      // Fallback to alert for global or unexpected errors
+      alert(error instanceof Error ? error.message : 'Registration failed');
     } finally {
       setIsLoading(false);
     }
@@ -67,46 +111,81 @@ export default function RegisterPage() {
               </motion.div>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              <FormField
-                control={methods.control}
-                name="username"
-                label="Username"
-                placeholder="johndoe"
-                required
-              />
-            </motion.div>
+            <div className="grid grid-cols-2 gap-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25 }}
+              >
+                <FormField
+                  control={methods.control}
+                  name="username"
+                  label="Username"
+                  placeholder="johndoe"
+                  required
+                />
+              </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <FormField
-                control={methods.control}
-                name="email"
-                label="Email"
-                placeholder="you@example.com"
-                type="email"
-                required
-              />
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.25 }}
+              >
+                <FormField
+                  control={methods.control}
+                  name="email"
+                  label="Email"
+                  placeholder="you@example.com"
+                  type="email"
+                  required
+                />
+              </motion.div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <FormField
+                  control={methods.control}
+                  name="age"
+                  label="Age"
+                  placeholder="25"
+                  type="number"
+                  required
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <FormField control={methods.control} name="gender" label="Gender" required>
+                  {(fieldProps) => (
+                    <select
+                      {...fieldProps}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  )}
+                </FormField>
+              </motion.div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.35 }}
             >
-              <FormField
-                control={methods.control}
-                name="password"
-                label="Password"
-                required
-              >
+              <FormField control={methods.control} name="password" label="Password" required>
                 {(fieldProps) => (
                   <input
                     {...fieldProps}

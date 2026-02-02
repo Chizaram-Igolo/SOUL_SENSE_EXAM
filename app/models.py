@@ -4,7 +4,7 @@ Compatibility layer for tests and legacy imports.
 Core models have been refactored elsewhere.
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, Text, create_engine, event, Index, text
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, Text, create_engine, event, Index, text, DateTime
 from sqlalchemy.orm import relationship, declarative_base, Session
 from sqlalchemy.engine import Engine, Connection
 from typing import List, Optional, Any, Dict, Tuple, Union
@@ -40,6 +40,40 @@ class User(Base):
     strengths = relationship("UserStrengths", uselist=False, back_populates="user", cascade="all, delete-orphan")
     emotional_patterns = relationship("UserEmotionalPatterns", uselist=False, back_populates="user", cascade="all, delete-orphan")
     sync_settings = relationship("UserSyncSetting", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+
+
+class LoginAttempt(Base):
+    """
+    Track login attempts for security auditing and persistent locking.
+    Replaces in-memory 'failed_attempts' dictionary.
+    """
+    __tablename__ = 'login_attempts'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String, index=True)
+    ip_address = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    is_successful = Column(Boolean)
+
+
+class RefreshToken(Base):
+    """
+    Persistent storage for JWT refresh tokens.
+    Enables long-lived sessions with high security via:
+    - Token Rotation: New refresh token issued on every use.
+    - Revocation: Ability to kill sessions remotely.
+    """
+    __tablename__ = 'refresh_tokens'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), index=True, nullable=False)
+    token_hash = Column(String, unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    is_revoked = Column(Boolean, default=False)
+    
+    user = relationship("User", back_populates="refresh_tokens")
 
 
 class UserSyncSetting(Base):
@@ -104,6 +138,8 @@ class PersonalProfile(Base):
     user_id = Column(Integer, ForeignKey('users.id'), unique=True, index=True, nullable=False)
     
     # Basic Info
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     occupation = Column(String, nullable=True)
     education = Column(String, nullable=True)
     marital_status = Column(String, nullable=True)
@@ -124,6 +160,7 @@ class PersonalProfile(Base):
     high_pressure_events = Column(Text, nullable=True) # Issue #275: Recent high-pressure events
     
     avatar_path = Column(String, nullable=True) # Path to local image file
+    age = Column(Integer, nullable=True)
     
     last_updated = Column(String, default=lambda: datetime.utcnow().isoformat())
 

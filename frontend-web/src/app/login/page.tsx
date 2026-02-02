@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Button, Input } from '@/components/ui';
 import { AuthLayout, SocialLogin } from '@/components/auth';
 import { loginSchema } from '@/lib/validation';
 import { z } from 'zod';
+import { UseFormReturn } from 'react-hook-form';
 
 import { useAuth } from '@/hooks/useAuth';
 
@@ -24,17 +25,53 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Login error:', error);
       // TODO: Show error toast
+  const handleSubmit = async (data: LoginFormData, methods: UseFormReturn<LoginFormData>) => {
+    setIsLoading(true);
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', data.identifier);
+      formData.append('password', data.password);
+
+      const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const code = errorData.detail?.code;
+
+        // Map login-specific error codes
+        if (code === 'AUTH001') {
+          methods.setError('identifier', { message: 'Invalid username/email or password' });
+          return;
+        }
+
+        const errorMessage = errorData.detail?.message || errorData.detail || 'Login failed';
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log('Login successful:', result);
+      // TODO: Save token and redirect to dashboard
+      window.location.href = '/dashboard';
+    } catch (error) {
+      console.error('Login error:', error);
+      alert(error instanceof Error ? error.message : 'Invalid credentials');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <AuthLayout
-      title="Welcome back"
-      subtitle="Enter your credentials to access your account"
-    >
+    <AuthLayout title="Welcome back" subtitle="Enter your credentials to access your account">
       <Form schema={loginSchema} onSubmit={handleSubmit} className="space-y-5">
         {(methods) => (
           <>
+            <FormKeyboardListener reset={methods.reset} />
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -42,10 +79,10 @@ export default function LoginPage() {
             >
               <FormField
                 control={methods.control}
-                name="email"
-                label="Email"
-                placeholder="you@example.com"
-                type="email"
+                name="identifier"
+                label="Email or Username"
+                placeholder="you@example.com or username"
+                type="text"
                 required
               />
             </motion.div>
@@ -55,12 +92,7 @@ export default function LoginPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <FormField
-                control={methods.control}
-                name="password"
-                label="Password"
-                required
-              >
+              <FormField control={methods.control} name="password" label="Password" required>
                 {(fieldProps) => (
                   <div className="relative">
                     <Input
@@ -75,11 +107,7 @@ export default function LoginPage() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 )}
@@ -158,4 +186,25 @@ export default function LoginPage() {
       </Form>
     </AuthLayout>
   );
+}
+
+function FormKeyboardListener({ reset }: { reset: (values?: any) => void }) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        // Clear all fields to empty strings
+        reset({
+          email: "",
+          password: "",
+          rememberMe: false
+        });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [reset]);
+
+  return null;
 }

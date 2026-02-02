@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime, timedelta
 from app.validation import (
     sanitize_text, validate_required, validate_length,
-    validate_email, validate_phone, validate_age,
+    validate_email, validate_email_strict, validate_phone, validate_age,
     validate_range, validate_dob,
     AGE_MIN, AGE_MAX
 )
@@ -36,7 +36,44 @@ def test_validate_email():
     assert validate_email("user.name+tag@example.co.uk")[0] is True
     assert validate_email("invalid-email")[0] is False
     assert validate_email("@example.com")[0] is False
+    assert validate_email("abc@gmail")[0] is False  # Missing TLD
     assert validate_email("")[0] is True  # Optional
+
+
+def test_validate_email_strict():
+    # Valid emails
+    assert validate_email_strict("test@example.com")[0] is True
+    assert validate_email_strict("user.name+tag@example.co.uk")[0] is True
+    assert validate_email_strict("user123@domain.org")[0] is True
+    
+    # Empty email
+    is_valid, msg = validate_email_strict("")
+    assert is_valid is False
+    assert "required" in msg.lower()
+    
+    # Missing @ symbol
+    is_valid, msg = validate_email_strict("invalidemail")
+    assert is_valid is False
+    assert "@" in msg
+    
+    # Missing domain
+    is_valid, msg = validate_email_strict("user@")
+    assert is_valid is False
+    assert "domain" in msg.lower()
+    
+    # Missing TLD (no dot in domain)
+    is_valid, msg = validate_email_strict("user@domain")
+    assert is_valid is False
+    assert "extension" in msg.lower()
+    
+    # TLD too short
+    is_valid, msg = validate_email_strict("user@domain.c")
+    assert is_valid is False
+    assert "2 characters" in msg.lower()
+    
+    # Multiple @ symbols
+    is_valid, msg = validate_email_strict("user@@domain.com")
+    assert is_valid is False
 
 
 def test_validate_phone():

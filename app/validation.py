@@ -21,7 +21,9 @@ XSS_PATTERNS = [
 ]
 
 # Constants
-EMAIL_REGEX = r"[^@]+@[^@]+\.[^@]+"
+# Stricter email regex matching frontend validation (requires valid TLD)
+EMAIL_REGEX = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+EMAIL_REGEX_STRICT = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 PHONE_REGEX = r"^\+?[\d\s-]{10,}$"
 USERNAME_REGEX = r"^[a-zA-Z0-9_-]+$"
 
@@ -126,6 +128,48 @@ def validate_email(email: str) -> Tuple[bool, str]:
         return True, ""  # Empty is valid (optional), use validate_required if mandatory
     if not re.match(EMAIL_REGEX, email):
         return False, "Invalid email format."
+    return True, ""
+
+
+def validate_email_strict(email: str) -> Tuple[bool, str]:
+    """
+    Strict email validation with detailed error messages.
+    Matches frontend validation behavior for real-time feedback.
+    """
+    if not email:
+        return False, "Email is required"
+    
+    # Check for @ symbol
+    if '@' not in email:
+        return False, "Email must contain '@' symbol"
+    
+    parts = email.split('@')
+    if len(parts) != 2:
+        return False, "Email must contain exactly one '@' symbol"
+    
+    local_part, domain = parts
+    
+    # Check local part
+    if not local_part:
+        return False, "Email must have a local part before '@'"
+    
+    # Check domain
+    if not domain:
+        return False, "Email must have a domain after '@'"
+    
+    # Check for valid TLD (domain must have a dot)
+    if '.' not in domain:
+        return False, "Domain must include a valid extension (e.g., .com)"
+    
+    # Split domain to check TLD
+    domain_parts = domain.rsplit('.', 1)
+    if len(domain_parts) < 2 or len(domain_parts[1]) < 2:
+        return False, "Domain extension must be at least 2 characters"
+    
+    # Final regex check for valid characters
+    if not re.match(EMAIL_REGEX_STRICT, email):
+        return False, "Please enter a valid email address (e.g., name@example.com)"
+    
     return True, ""
 
 

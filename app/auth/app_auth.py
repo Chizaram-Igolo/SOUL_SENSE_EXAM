@@ -100,7 +100,29 @@ class AppAuth:
         tk.Label(entry_frame, text="Email or Username", font=("Segoe UI", 10, "bold"),
                  bg=self.app.colors["bg"], fg=self.app.colors["text_primary"]).pack(anchor="w")
         username_entry = tk.Entry(entry_frame, font=("Segoe UI", 12))
-        username_entry.pack(fill="x", pady=(5, 15))
+        username_entry.pack(fill="x", pady=(5, 5))
+        
+        # Email validation error label for login (only shows for email-like input)
+        login_email_error_label = tk.Label(entry_frame, text="", font=("Segoe UI", 8), 
+                                           bg=self.app.colors["bg"], fg="#EF4444")
+        login_email_error_label.pack(anchor="w", pady=(0, 10))
+        
+        # Real-time email validation for login (only if input looks like an email)
+        def validate_login_email_realtime(event=None):
+            from app.validation import validate_email_strict
+            identifier = username_entry.get().strip()
+            # Only validate if it looks like an email (contains @)
+            if '@' in identifier:
+                is_valid, error_msg = validate_email_strict(identifier)
+                if is_valid:
+                    login_email_error_label.config(text="")
+                else:
+                    login_email_error_label.config(text=error_msg)
+            else:
+                login_email_error_label.config(text="")
+        
+        username_entry.bind("<KeyRelease>", validate_login_email_realtime)
+        username_entry.bind("<FocusOut>", validate_login_email_realtime)
 
         tk.Label(entry_frame, text="Password", font=("Segoe UI", 10, "bold"),
                  bg=self.app.colors["bg"], fg=self.app.colors["text_primary"]).pack(anchor="w")
@@ -259,6 +281,31 @@ class AppAuth:
                  bg=self.app.colors.get("surface", "#FFFFFF"), fg=self.app.colors["text_primary"]).pack(anchor="w")
         email_entry = tk.Entry(em_frame, font=("Segoe UI", 10), bg=self.app.colors.get("entry_bg", "#F8FAFC"), relief="flat", highlightthickness=1)
         email_entry.pack(fill="x", ipady=4)
+        
+        # Email validation error label
+        email_error_label = tk.Label(em_frame, text="", font=("Segoe UI", 8), 
+                                     bg=self.app.colors.get("surface", "#FFFFFF"), fg="#EF4444")
+        email_error_label.pack(anchor="w")
+        
+        # Real-time email validation function
+        def validate_email_realtime(event=None):
+            from app.validation import validate_email_strict
+            email = email_entry.get().strip()
+            if not email:
+                email_error_label.config(text="")
+                email_entry.config(highlightbackground=self.app.colors.get("border", "#E2E8F0"), highlightcolor=self.app.colors.get("border", "#E2E8F0"))
+                return
+            is_valid, error_msg = validate_email_strict(email)
+            if is_valid:
+                email_error_label.config(text="")
+                email_entry.config(highlightbackground="#10B981", highlightcolor="#10B981")
+            else:
+                email_error_label.config(text=error_msg)
+                email_entry.config(highlightbackground="#EF4444", highlightcolor="#EF4444")
+        
+        # Bind validation to key release and focus out events
+        email_entry.bind("<KeyRelease>", validate_email_realtime)
+        email_entry.bind("<FocusOut>", validate_email_realtime)
 
         # Row 2: Age & Gender
         ag_frame = tk.Frame(form_frame, bg=self.app.colors.get("surface", "#FFFFFF"))
@@ -337,6 +384,14 @@ class AppAuth:
                 return
             if not email:
                 tk.messagebox.showerror("Error", "Email is required")
+                email_entry.focus_set()
+                return
+            # Strict email validation
+            from app.validation import validate_email_strict
+            email_valid, email_error = validate_email_strict(email)
+            if not email_valid:
+                tk.messagebox.showerror("Error", email_error)
+                email_entry.focus_set()
                 return
             if not age_str:
                 tk.messagebox.showerror("Error", "Age is required")

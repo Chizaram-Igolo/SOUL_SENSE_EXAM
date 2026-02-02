@@ -1,4 +1,4 @@
-
+from typing import Optional
 import os
 import base64
 import logging
@@ -45,7 +45,7 @@ class EncryptionManager:
         return cls._cipher
 
     @classmethod
-    def encrypt(cls, plaintext: str) -> str:
+    def encrypt(cls, plaintext: str) -> Optional[str]:
         """Encrypt string value"""
         if not plaintext:
             return None
@@ -57,7 +57,7 @@ class EncryptionManager:
             raise
 
     @classmethod
-    def decrypt(cls, ciphertext: str) -> str:
+    def decrypt(cls, ciphertext: str) -> Optional[str]:
         """Decrypt string value"""
         if not ciphertext:
             return None

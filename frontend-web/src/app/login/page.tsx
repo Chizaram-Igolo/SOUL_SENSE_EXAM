@@ -186,6 +186,25 @@ export default function LoginPage() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Enter your password"
                       className="pr-10"
+                      // SECURITY HARDENING START
+                      autoComplete="off"
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        return false;
+                      }}
+                      onCopy={(e) => {
+                        e.preventDefault();
+                        return false;
+                      }}
+                      onCut={(e) => {
+                        e.preventDefault();
+                        return false;
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        return false;
+                      }}
+                      
                     />
                     <button
                       type="button"
@@ -281,7 +300,7 @@ function FormKeyboardListener({ reset }: { reset: (values?: any) => void }) {
         e.preventDefault();
         // Clear all fields to empty strings
         reset({
-          email: '',
+          identifier: '',
           password: '',
           rememberMe: false,
         });

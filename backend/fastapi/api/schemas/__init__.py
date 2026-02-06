@@ -838,6 +838,30 @@ class JournalPromptsResponse(BaseModel):
 
 
 # ============================================================================
+# Smart Journal Prompts Schemas (Issue #586)
+# ============================================================================
+
+class SmartPrompt(BaseModel):
+    """Schema for a personalized AI journal prompt."""
+    id: int
+    prompt: str
+    category: str = Field(description="Prompt category (anxiety, stress, gratitude, etc.)")
+    context_reason: str = Field(description="Why this prompt was selected for the user")
+    description: Optional[str] = Field(None, description="Brief description of prompt purpose")
+
+
+class SmartPromptsResponse(BaseModel):
+    """Response with AI-personalized journal prompts."""
+    prompts: List[SmartPrompt] = Field(description="Personalized prompts (usually 3)")
+    user_mood: str = Field(description="Detected mood: positive, neutral, or low")
+    detected_patterns: List[str] = Field(
+        default=[], 
+        description="Emotional patterns detected from recent entries"
+    )
+    sentiment_avg: float = Field(description="Average sentiment from last 7 days")
+
+
+# ============================================================================
 # Settings Synchronization Schemas (Issue #396)
 # ============================================================================
 

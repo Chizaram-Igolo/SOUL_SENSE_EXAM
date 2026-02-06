@@ -130,6 +130,7 @@ export default function LoginPage() {
               placeholder="123456"
               className="text-center text-lg tracking-widest"
               maxLength={6}
+              disabled={isLoading}
             />
             {twoFaError && (
               <p className="text-sm font-medium text-destructive text-red-500">{twoFaError}</p>
@@ -148,6 +149,7 @@ export default function LoginPage() {
             variant="ghost"
             onClick={() => setShow2FA(false)}
             className="w-full text-muted-foreground"
+            disabled={isLoading}
           >
             Back to Login
           </Button>

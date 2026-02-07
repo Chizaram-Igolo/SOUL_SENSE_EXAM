@@ -87,6 +87,32 @@ class OTPManager:
                 session.close()
 
     @classmethod
+    def get_cooldown_remaining(cls, user_id: int, purpose: str, db_session=None) -> int:
+        """
+        Return remaining cooldown seconds before a new OTP can be requested.
+        Returns 0 if no cooldown is active.
+        """
+        session = db_session if db_session else get_session()
+        should_close = db_session is None
+        try:
+            last_otp = session.query(OTP).filter(
+                OTP.user_id == user_id,
+                OTP.type == purpose
+            ).order_by(OTP.created_at.desc()).first()
+
+            if last_otp:
+                time_since = datetime.utcnow() - last_otp.created_at
+                remaining = cls.RATE_LIMIT_SECONDS - int(time_since.total_seconds())
+                return max(0, remaining)
+            return 0
+        except Exception as e:
+            logger.error(f"Error checking cooldown: {e}")
+            return 0
+        finally:
+            if should_close:
+                session.close()
+
+    @classmethod
     def verify_otp(cls, user_id: int, code: str, purpose: str, db_session=None) -> bool:
         """
         Verify an OTP code.

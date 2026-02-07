@@ -406,15 +406,15 @@ class AppAuth:
         """Show OTP Verification Dialog"""
         otp_window = tk.Toplevel(self.app.root)
         otp_window.title("Verify Code")
-        otp_window.geometry("400x300")
+        otp_window.geometry("400x380")
         otp_window.configure(bg=self.app.colors["bg"])
         
         # Center
         screen_width = otp_window.winfo_screenwidth()
         screen_height = otp_window.winfo_screenheight()
         x = (screen_width - 400) // 2
-        y = (screen_height - 300) // 2
-        otp_window.geometry(f"400x300+{x}+{y}")
+        y = (screen_height - 380) // 2
+        otp_window.geometry(f"400x380+{x}+{y}")
         
         tk.Label(otp_window, text="Enter Verification Code", font=("Segoe UI", 14, "bold"), 
                 bg=self.app.colors["bg"], fg=self.app.colors["text_primary"]).pack(pady=20)
@@ -443,13 +443,52 @@ class AppAuth:
 
         tk.Button(otp_window, text="Verify", command=on_verify, 
                  bg=self.app.colors["primary"], fg="white", font=("Segoe UI", 10, "bold"), 
-                 padx=20, pady=5).pack(pady=(20, 10))
+                 padx=20, pady=5).pack(pady=(15, 5))
+
+        # --- Resend OTP with Cooldown ---
+        resend_frame = tk.Frame(otp_window, bg=self.app.colors["bg"])
+        resend_frame.pack(pady=(5, 5))
+
+        cooldown_label = tk.Label(resend_frame, text="", font=("Segoe UI", 9),
+                                  bg=self.app.colors["bg"], fg=self.app.colors["text_secondary"])
+        cooldown_label.pack()
+
+        resend_btn = tk.Button(resend_frame, text="Resend Code", font=("Segoe UI", 9, "bold"),
+                               bg=self.app.colors["bg"], fg=self.app.colors["primary"],
+                               relief="flat", cursor="hand2")
+        resend_btn.pack(pady=(2, 0))
+
+        _resend_timer_id = [None]
+
+        def start_cooldown(seconds):
+            """Disable resend button and show countdown."""
+            if seconds > 0:
+                resend_btn.config(state="disabled", fg="#9CA3AF", cursor="arrow")
+                cooldown_label.config(text=f"Resend available in {seconds}s")
+                _resend_timer_id[0] = otp_window.after(1000, lambda: start_cooldown(seconds - 1))
+            else:
+                resend_btn.config(state="normal", fg=self.app.colors["primary"], cursor="hand2")
+                cooldown_label.config(text="Didn't receive a code?")
+                _resend_timer_id[0] = None
+
+        def on_resend():
+            success, msg = self.auth_manager.initiate_password_reset(email)
+            if success:
+                tmb.showinfo("Code Sent", "A new verification code has been sent.", parent=otp_window)
+                start_cooldown(60)
+            else:
+                tmb.showerror("Error", msg, parent=otp_window)
+
+        resend_btn.config(command=on_resend)
+
+        # Start with cooldown active (OTP was just sent)
+        start_cooldown(60)
                  
         # Change Email option
         tk.Button(otp_window, text="Change Email", 
                  command=lambda: [otp_window.destroy(), self.show_forgot_password()],
                  bg=self.app.colors["bg"], fg=self.app.colors["primary"],
-                 font=("Segoe UI", 9), relief="flat", cursor="hand2").pack(pady=(0, 20))
+                 font=("Segoe UI", 9), relief="flat", cursor="hand2").pack(pady=(5, 10))
 
     def show_reset_password_dialog(self, email, code):
         """Show New Password Dialog"""
@@ -894,7 +933,7 @@ class AppAuth:
 
         dialog = tk.Toplevel(self.app.root)
         dialog.title("2FA Verification")
-        dialog.geometry("350x250")
+        dialog.geometry("350x340")
         dialog.transient(self.app.root)
         dialog.grab_set()
         
@@ -902,7 +941,7 @@ class AppAuth:
         screen_width = dialog.winfo_screenwidth()
         screen_height = dialog.winfo_screenheight()
         x = (screen_width - 350) // 2
-        y = (screen_height - 250) // 2
+        y = (screen_height - 340) // 2
         dialog.geometry(f"+{x}+{y}")
         
         tk.Label(dialog, text="Two-Factor Authentication", font=("Segoe UI", 12, "bold"), pady=15).pack()
@@ -950,9 +989,48 @@ class AppAuth:
 
         tk.Button(dialog, text="Verify", command=on_verify, 
                  bg=self.app.colors["primary"], fg="white", font=("Segoe UI", 10, "bold"), 
-                 padx=20, pady=5).pack(pady=15)
+                 padx=20, pady=5).pack(pady=(10, 5))
+
+        # --- Resend OTP with Cooldown ---
+        resend_frame = tk.Frame(dialog, bg=dialog.cget("bg"))
+        resend_frame.pack(pady=(5, 5))
+
+        cooldown_label = tk.Label(resend_frame, text="", font=("Segoe UI", 9), fg="#666",
+                                  bg=dialog.cget("bg"))
+        cooldown_label.pack()
+
+        resend_btn = tk.Button(resend_frame, text="Resend Code", font=("Segoe UI", 9, "bold"),
+                               bg=dialog.cget("bg"), fg=self.app.colors["primary"],
+                               relief="flat", cursor="hand2")
+        resend_btn.pack(pady=(2, 0))
+
+        _resend_timer_id = [None]
+
+        def start_cooldown(seconds):
+            """Disable resend button and show countdown."""
+            if seconds > 0:
+                resend_btn.config(state="disabled", fg="#9CA3AF", cursor="arrow")
+                cooldown_label.config(text=f"Resend available in {seconds}s")
+                _resend_timer_id[0] = dialog.after(1000, lambda: start_cooldown(seconds - 1))
+            else:
+                resend_btn.config(state="normal", fg=self.app.colors["primary"], cursor="hand2")
+                cooldown_label.config(text="Didn't receive a code?")
+                _resend_timer_id[0] = None
+
+        def on_resend():
+            success, msg = self.auth_manager.resend_2fa_login_otp(username)
+            if success:
+                tmb.showinfo("Code Sent", msg, parent=dialog)
+                start_cooldown(60)
+            else:
+                tmb.showerror("Error", msg, parent=dialog)
+
+        resend_btn.config(command=on_resend)
+
+        # Start with cooldown active (OTP was just sent during login)
+        start_cooldown(60)
                  
-        tk.Button(dialog, text="Cancel", command=on_cancel, relief="flat", fg="#666").pack()
+        tk.Button(dialog, text="Cancel", command=on_cancel, relief="flat", fg="#666").pack(pady=(5, 0))
         
         dialog.bind("<Return>", on_verify)
         dialog.protocol("WM_DELETE_WINDOW", on_cancel)

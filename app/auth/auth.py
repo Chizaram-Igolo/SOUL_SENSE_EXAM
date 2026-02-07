@@ -456,6 +456,41 @@ class AuthManager:
         finally:
             session.close()
 
+    def resend_2fa_login_otp(self, username):
+        """
+        Resend the 2FA login OTP for a user.
+        Returns: (success, message)
+        """
+        from app.auth.otp_manager import OTPManager
+        from app.services.email_service import EmailService
+        from app.models import PersonalProfile
+
+        session = get_session()
+        try:
+            username_lower = username.lower().strip()
+            user = session.query(User).filter(User.username == username_lower).first()
+            if not user:
+                return False, "User not found."
+
+            profile = session.query(PersonalProfile).filter(PersonalProfile.user_id == user.id).first()
+            email_to_send = profile.email if profile else None
+            if not email_to_send:
+                return False, "No email configured for this account."
+
+            code, error = OTPManager.generate_otp(user.id, "LOGIN_CHALLENGE", db_session=session)
+            if not code:
+                return False, error or "Please wait before requesting a new code."
+
+            if EmailService.send_otp(email_to_send, code, "Login Verification"):
+                return True, "A new verification code has been sent."
+            else:
+                return False, "Failed to send email. Please try again."
+        except Exception as e:
+            logging.error(f"Resend 2FA OTP Error: {e}")
+            return False, "An error occurred. Please try again."
+        finally:
+            session.close()
+
     def complete_password_reset(self, email, otp_code, new_password):
         """
         Verify OTP and update password.

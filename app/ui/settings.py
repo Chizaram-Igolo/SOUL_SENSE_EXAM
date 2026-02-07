@@ -434,13 +434,13 @@ class SettingsManager:
         """Show dialog to enter OTP for enabling 2FA"""
         dialog = tk.Toplevel(self.settings_win)
         dialog.title("Verify 2FA Setup")
-        dialog.geometry("350x250")
+        dialog.geometry("350x340")
         dialog.transient(self.settings_win)
         dialog.grab_set()
         
         # Center
         x = self.settings_win.winfo_x() + (self.settings_win.winfo_width() - 350) // 2
-        y = self.settings_win.winfo_y() + (self.settings_win.winfo_height() - 250) // 2
+        y = self.settings_win.winfo_y() + (self.settings_win.winfo_height() - 340) // 2
         dialog.geometry(f"+{x}+{y}")
         
         tk.Label(dialog, text="Enter Verification Code", font=("Segoe UI", 12, "bold"), pady=15).pack()
@@ -471,7 +471,46 @@ class SettingsManager:
                 
         tk.Button(dialog, text="Verify & Enable", command=on_verify, 
                  bg=self.app.colors["primary"], fg="white", font=("Segoe UI", 10, "bold"), 
-                 padx=20, pady=5).pack(pady=15)
+                 padx=20, pady=5).pack(pady=(10, 5))
+
+        # --- Resend OTP with Cooldown ---
+        resend_frame = tk.Frame(dialog, bg=dialog.cget("bg"))
+        resend_frame.pack(pady=(5, 5))
+
+        cooldown_label = tk.Label(resend_frame, text="", font=("Segoe UI", 9), fg="#666",
+                                  bg=dialog.cget("bg"))
+        cooldown_label.pack()
+
+        resend_btn = tk.Button(resend_frame, text="Resend Code", font=("Segoe UI", 9, "bold"),
+                               bg=dialog.cget("bg"), fg=self.app.colors["primary"],
+                               relief="flat", cursor="hand2")
+        resend_btn.pack(pady=(2, 0))
+
+        _resend_timer_id = [None]
+
+        def start_cooldown(seconds):
+            """Disable resend button and show countdown."""
+            if seconds > 0:
+                resend_btn.config(state="disabled", fg="#9CA3AF", cursor="arrow")
+                cooldown_label.config(text=f"Resend available in {seconds}s")
+                _resend_timer_id[0] = dialog.after(1000, lambda: start_cooldown(seconds - 1))
+            else:
+                resend_btn.config(state="normal", fg=self.app.colors["primary"], cursor="hand2")
+                cooldown_label.config(text="Didn't receive a code?")
+                _resend_timer_id[0] = None
+
+        def on_resend():
+            success, msg = self.app.auth.auth_manager.send_2fa_setup_otp(self.app.username)
+            if success:
+                messagebox.showinfo("Code Sent", msg, parent=dialog)
+                start_cooldown(60)
+            else:
+                messagebox.showerror("Error", msg, parent=dialog)
+
+        resend_btn.config(command=on_resend)
+
+        # Start with cooldown active (OTP was just sent)
+        start_cooldown(60)
                  
     def _disable_2fa(self):
         """Disable 2FA"""

@@ -43,14 +43,14 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Test Root App
-        timeout-minutes: 15
+        timeout-minutes: 20
         env:
           DISPLAY: ":0.0"
         run: |
-          # Run parallel tests (exclude serial tests) with per-test timeout
-          pytest tests/ -n auto --maxfail=5 -m "not serial" --timeout=300
+          # Run parallel tests with 2 workers (conservative for CI stability)
+          pytest tests/ -n 2 --maxfail=5 -m "not serial" --timeout=120 -v
           # Run serial tests sequentially with per-test timeout
-          pytest tests/ -m "serial" --maxfail=5 --timeout=300
+          pytest tests/ -m "serial" --maxfail=5 --timeout=180
 
       - timeout-minutes: 10
         name: Test Backend App

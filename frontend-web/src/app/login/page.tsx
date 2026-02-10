@@ -33,6 +33,28 @@ export default function LoginPage() {
   // Forgot Password Modal State
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
+  // CAPTCHA State
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [captchaCode, setCaptchaCode] = useState('');
+  const [userCaptchaInput, setUserCaptchaInput] = useState('');
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [captchaError, setCaptchaError] = useState('');
+  const [captchaAttempts, setCaptchaAttempts] = useState(0);
+
+  const generateCaptcha = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let code = '';
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptchaCode(code);
+    setUserCaptchaInput('');
+    setCaptchaVerified(false);
+    setCaptchaError('');
+    setCaptchaAttempts(0);
+    drawCaptcha(code);
+  };
+
   useEffect(() => {
     generateCaptcha();
   }, []);

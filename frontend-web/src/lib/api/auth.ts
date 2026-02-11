@@ -7,12 +7,18 @@ export const authApi = {
     captcha_input?: string;
     session_id?: string;
   }): Promise<{ access_token: string; pre_auth_token?: string }> {
+    const payload = {
+      identifier: data.username,
+      password: data.password,
+      captcha_input: data.captcha_input,
+      session_id: data.session_id,
+    };
     return apiClient('/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   },
 
@@ -46,6 +52,45 @@ export const authApi = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
+    });
+  },
+  async getCaptcha(): Promise<{ captcha_code: string; session_id: string }> {
+    return apiClient('/auth/captcha', {
+      method: 'GET',
+    });
+  },
+
+  async checkUsernameAvailability(
+    username: string
+  ): Promise<{ available: boolean; message: string }> {
+    return apiClient(`/auth/check-username?username=${encodeURIComponent(username)}`, {
+      method: 'GET',
+    });
+  },
+
+  async register(data: {
+    username: string;
+    password: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    age: number;
+    gender: string;
+  }): Promise<{ message: string }> {
+    // Map camelCase to snake_case for backend
+    const payload = {
+      username: data.username,
+      password: data.password,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      age: data.age,
+      gender: data.gender,
+    };
+    return apiClient('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
   },
 };

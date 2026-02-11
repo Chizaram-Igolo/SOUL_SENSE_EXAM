@@ -11,8 +11,12 @@ import { registrationSchema } from '@/lib/validation';
 import { z } from 'zod';
 import { UseFormReturn } from 'react-hook-form';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { authApi } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/errors';
+import { useRateLimiter } from '@/hooks/useRateLimiter';
+import { analyticsApi } from '@/lib/api/analytics';
 
 type RegisterFormData = z.infer<typeof registrationSchema>;
 
@@ -34,6 +38,20 @@ function RegisterFormContent({
   const [availabilityStatus, setAvailabilityStatus] = useState<
     'idle' | 'loading' | 'available' | 'taken' | 'invalid'
   >('idle');
+
+  // Analytics: Track field interactions
+  const trackedFields = useRef<Set<string>>(new Set());
+  const handleFocus = useCallback((fieldName: string) => {
+    if (!trackedFields.current.has(fieldName)) {
+      trackedFields.current.add(fieldName);
+      analyticsApi.trackEvent({
+        anonymous_id: '', // Handled by client
+        event_type: 'signup_workflow',
+        event_name: 'field_focus',
+        event_data: { field: fieldName },
+      });
+    }
+  }, []);
 
   // Local cache to prevent redundant API calls
   const availabilityCache = useMemo(
@@ -67,11 +85,7 @@ function RegisterFormContent({
     const checkAvailability = async () => {
       setAvailabilityStatus('loading');
       try {
-        const response = await fetch(
-          `http://localhost:8000/api/v1/auth/check-username?username=${debouncedUsername}`
-        );
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
+        const data = await authApi.checkUsernameAvailability(debouncedUsername);
         availabilityCache.set(debouncedUsername, data);
         setAvailabilityStatus(data.available ? 'available' : 'taken');
       } catch (error) {
@@ -104,6 +118,7 @@ function RegisterFormContent({
             placeholder="John"
             required
             disabled={isLoading}
+            onFocus={() => handleFocus('firstName')}
           />
         </motion.div>
 
@@ -118,6 +133,7 @@ function RegisterFormContent({
             label="Last name"
             placeholder="Doe"
             disabled={isLoading}
+            onFocus={() => handleFocus('lastName')}
           />
         </motion.div>
       </div>
@@ -134,6 +150,7 @@ function RegisterFormContent({
           placeholder="johndoe"
           required
           disabled={isLoading}
+          onFocus={() => handleFocus('username')}
         >
           {(fieldProps) => (
             <div className="relative">
@@ -183,6 +200,7 @@ function RegisterFormContent({
           type="email"
           required
           disabled={isLoading}
+          onFocus={() => handleFocus('email')}
         />
       </motion.div>
 
@@ -200,6 +218,7 @@ function RegisterFormContent({
             type="number"
             required
             disabled={isLoading}
+            onFocus={() => handleFocus('age')}
           />
         </motion.div>
 
@@ -208,7 +227,13 @@ function RegisterFormContent({
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.35 }}
         >
-          <FormField control={methods.control} name="gender" label="Gender" required>
+          <FormField
+            control={methods.control}
+            name="gender"
+            label="Gender"
+            required
+            onFocus={() => handleFocus('gender')}
+          >
             {(fieldProps) => (
               <select
                 {...fieldProps}
@@ -231,7 +256,13 @@ function RegisterFormContent({
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <FormField control={methods.control} name="password" label="Password" required>
+        <FormField
+          control={methods.control}
+          name="password"
+          label="Password"
+          required
+          onFocus={() => handleFocus('password')}
+        >
           {(fieldProps) => (
             <div className="relative space-y-2">
               <Input
@@ -256,6 +287,7 @@ function RegisterFormContent({
           name="confirmPassword"
           label="Confirm Password"
           required
+          onFocus={() => handleFocus('confirmPassword')}
         >
           {(fieldProps) => (
             <div className="relative">
@@ -289,7 +321,11 @@ function RegisterFormContent({
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <FormField control={methods.control} name="acceptTerms">
+        <FormField
+          control={methods.control}
+          name="acceptTerms"
+          onFocus={() => handleFocus('acceptTerms')}
+        >
           {(fieldProps) => (
             <div className="flex items-start space-x-3 mb-4">
               <input
@@ -365,10 +401,6 @@ function RegisterFormContent({
   );
 }
 
-import { useRateLimiter } from '@/hooks/useRateLimiter';
-
-// ... (imports remain same)
-
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -378,52 +410,96 @@ export default function RegisterPage() {
 
   const { lockoutTime, isLocked, handleRateLimitError } = useRateLimiter();
 
+  // Analytics: Track page view
+  useEffect(() => {
+    analyticsApi.trackEvent({
+      anonymous_id: '',
+      event_type: 'signup_workflow',
+      event_name: 'signup_view',
+    });
+  }, []);
+
   const handleSubmit = async (data: RegisterFormData, methods: UseFormReturn<RegisterFormData>) => {
     if (isLocked) return;
 
+    // Analytics: Track submit attempt
+    analyticsApi.trackEvent({
+      anonymous_id: '',
+      event_type: 'signup_workflow',
+      event_name: 'signup_submit',
+    });
+
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: data.username,
-          password: data.password,
-          email: data.email,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          age: data.age,
-          gender: data.gender,
-        }),
+      const result = await authApi.register({
+        username: data.username,
+        password: data.password,
+        email: data.email || '',
+        first_name: data.firstName,
+        last_name: data.lastName,
+        age: data.age,
+        gender: data.gender,
       });
 
-      const result = await response.json();
+      setIsSuccess(true);
+      setSuccessMessage(
+        result.message || 'Registration request received. Please check your email for next steps.'
+      );
 
-      if (response.ok) {
-        setIsSuccess(true);
-        setSuccessMessage(
-          result.message || 'Registration request received. Please check your email for next steps.'
-        );
-      } else {
+      // Analytics: Track success
+      analyticsApi.trackEvent({
+        anonymous_id: '',
+        event_type: 'signup_workflow',
+        event_name: 'signup_success',
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        const result = error.data || {};
+
         // Check for Rate Limit Error first
-        if (handleRateLimitError(result, (msg) => methods.setError('root', { message: msg }))) {
+        if (
+          handleRateLimitError(result, (msg: string) => methods.setError('root', { message: msg }))
+        ) {
           return;
         }
 
-        // ENUMERATION PREVENTION: we no longer set specific field errors for 'exists'
-        // because the backend returns 200/Success for those now.
-        // We only handle policy/data errors here.
+        // Pydantic validation error parsing
+        let errorMessage = result.message;
+
+        if (!errorMessage && result.detail) {
+          if (Array.isArray(result.detail)) {
+            // Standard Pydantic detail list: [{loc, msg, type}]
+            errorMessage = result.detail[0]?.msg;
+          } else if (typeof result.detail === 'string') {
+            errorMessage = result.detail;
+          } else if (result.detail.message) {
+            errorMessage = result.detail.message;
+          }
+        }
+
         methods.setError('root', {
-          message:
-            result.detail?.message ||
-            result.message ||
-            'Registration failed. Please try again or contact support.',
+          message: errorMessage || 'Registration failed. Please try again or contact support.',
+        });
+
+        // Analytics: Track API error
+        analyticsApi.trackEvent({
+          anonymous_id: '',
+          event_type: 'signup_workflow',
+          event_name: 'signup_error',
+          event_data: { error: errorMessage || 'Registration failed' },
+        });
+      } else {
+        methods.setError('root', {
+          message: 'Network error. Please check your connection and try again.',
+        });
+
+        // Analytics: Track Network error
+        analyticsApi.trackEvent({
+          anonymous_id: '',
+          event_type: 'signup_workflow',
+          event_name: 'signup_network_error',
         });
       }
-    } catch (error) {
-      methods.setError('root', {
-        message: 'Network error. Please check your connection and try again.',
-      });
     } finally {
       setIsLoading(false);
     }

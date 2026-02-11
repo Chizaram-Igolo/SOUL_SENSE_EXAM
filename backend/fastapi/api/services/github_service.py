@@ -40,7 +40,7 @@ class GitHubService:
         
         # LRU Cache to prevent memory leaks (Max 1000 items)
         self._cache = LRUCache(maxsize=1000)
-        self.CACHE_TTL = 3600 * 24 * 7  # Increased to 7 days for immunity
+        self.CACHE_TTL = 3600  # 1 hour for better data freshness
         self._client: Optional[httpx.AsyncClient] = None
         
         # Persistent Cache Setup

@@ -53,7 +53,7 @@ class BaseAppSettings(BaseSettings):
 
     # CORS Configuration
     allowed_origins: str = Field(
-        default='["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:3005"]',
+        default='["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000", "http://localhost:3005", "http://127.0.0.1:3005", "tauri://localhost"]',
         description="Allowed origins for CORS"
     )
 
@@ -109,6 +109,7 @@ class DevelopmentSettings(BaseAppSettings):
     """Settings for development environment."""
 
     debug: bool = True
+    mock_auth_mode: bool = True
     jwt_secret_key: str = Field(default="dev_jwt_secret_key_for_development_only_not_secure", description="Development JWT key")
 
 

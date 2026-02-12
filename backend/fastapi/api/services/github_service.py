@@ -25,7 +25,7 @@ except LookupError:
         print(f"[WARN] NLTK Download Failed: {e}")
 
 class GitHubService:
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = get_settings_instance()
         self.base_url = "https://api.github.com"
         self.headers = {
@@ -54,7 +54,7 @@ class GitHubService:
         except Exception:
             pass
 
-    def _load_cache_sync(self):
+    def _load_cache_sync(self) -> None:
         """Sync load for startup."""
         try:
             if os.path.exists(self.CACHE_FILE):

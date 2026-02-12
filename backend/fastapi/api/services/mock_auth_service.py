@@ -214,7 +214,7 @@ class MockAuthService:
         
         # Get email from profile
         profile = MOCK_PROFILES.get(user.id, {})
-        email = profile.get("email", "unknown@example.com")
+        email = str(profile.get("email", "unknown@example.com"))
         otp_code = MOCK_OTP_CODES.get(email, "123456")
         
         logger.info(f"🎭 Mock 2FA initiated for {email}. OTP: {otp_code}")
@@ -250,7 +250,7 @@ class MockAuthService:
                 if user_data["id"] == user_id:
                     # Get email from profile
                     profile = MOCK_PROFILES.get(user_id, {})
-                    email = profile.get("email", "")
+                    email = str(profile.get("email", ""))
                     expected_code = MOCK_OTP_CODES.get(email, "123456")
                     
                     if code == expected_code:

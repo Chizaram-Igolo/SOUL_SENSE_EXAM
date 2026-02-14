@@ -1077,7 +1077,7 @@ class AppAuth:
                 if first_field_with_error:
                     try:
                         first_field_with_error.focus_set()
-                    except:
+                    except Exception:
                         pass  # Some widgets may not support focus_set()
                 return
             

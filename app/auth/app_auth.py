@@ -1041,7 +1041,23 @@ class AppAuth:
                 if not first_field_with_error:
                     first_field_with_error = password_entry
                 has_error = True
-            
+            else:
+                # Perform comprehensive password security validation
+                try:
+                    from app.validation import validate_password_security
+                except ImportError:
+                    validate_password_security = None
+
+                if validate_password_security is not None:
+                    is_secure, error_message = validate_password_security(password)
+                    if not is_secure:
+                        password_entry.config(highlightbackground="#EF4444", highlightcolor="#EF4444")
+                        password_mismatch_label.config(
+                            text=error_message or "Password does not meet security requirements."
+                        )
+                        if not first_field_with_error:
+                            first_field_with_error = password_entry
+                        has_error = True
             # Check confirm password
             if password and confirm_password and password != confirm_password:
                 password_mismatch_label.config(text="Passwords do not match")

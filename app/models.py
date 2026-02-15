@@ -34,6 +34,8 @@ class User(Base):
     
     # PR 1: Security & Lifecycle Fields
     is_active = Column(Boolean, default=True, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    deleted_at = Column(DateTime, nullable=True) # Timestamp of soft delete
     otp_secret = Column(String, nullable=True) # TOTP Secret
     is_2fa_enabled = Column(Boolean, default=False, nullable=False)
     last_activity = Column(String, nullable=True) # Track idle time
@@ -46,6 +48,7 @@ class User(Base):
     strengths = relationship("UserStrengths", uselist=False, back_populates="user", cascade="all, delete-orphan")
     emotional_patterns = relationship("UserEmotionalPatterns", uselist=False, back_populates="user", cascade="all, delete-orphan")
     sync_settings = relationship("UserSyncSetting", back_populates="user", cascade="all, delete-orphan")
+    password_history = relationship("PasswordHistory", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
@@ -85,6 +88,24 @@ class AuditLog(Base):
 
     user = relationship("User", back_populates="audit_logs")
 
+class AnalyticsEvent(Base):
+    """
+    Track user behavior events (e.g., signup drop-off).
+    Uses anonymous_id for pre-signup tracking.
+    """
+    __tablename__ = 'analytics_events'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    anonymous_id = Column(String, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)
+    event_type = Column(String, nullable=False, index=True) # e.g. 'signup_step'
+    event_name = Column(String, nullable=False) # e.g. 'focus_email'
+    event_data = Column(Text, nullable=True) # JSON payload
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    ip_address = Column(String, nullable=True)
+
+    user = relationship("User")
+
 class OTP(Base):
     """
     One-Time Passwords for Password Reset and 2FA challenges.
@@ -99,9 +120,24 @@ class OTP(Base):
     expires_at = Column(DateTime, nullable=False)
     is_used = Column(Boolean, default=False)
     attempts = Column(Integer, default=0)
+    is_locked = Column(Boolean, default=False)
 
     user = relationship("User")
 
+
+class PasswordHistory(Base):
+    """
+    Stores hashed previous passwords to prevent reuse.
+    Configurable via PASSWORD_HISTORY_LIMIT in security_config.
+    """
+    __tablename__ = 'password_history'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="password_history")
 
 class RefreshToken(Base):
     """
@@ -176,6 +212,21 @@ class UserSettings(Base):
     notifications_enabled = Column(Boolean, default=True) # Web-ready
     language = Column(String, default='en') # Web-ready
     updated_at = Column(String, default=lambda: datetime.now(UTC).isoformat())
+    
+    # Wave 2 Phase 2.3 & 2.4: Calibration & Safety
+    decision_making_style = Column(String, nullable=True) # Analytical/Intuitive/etc.
+    risk_tolerance = Column(Integer, nullable=True)     # 1-10 slider
+    readiness_for_change = Column(Integer, nullable=True) # 1-10 scale
+    advice_frequency = Column(String, nullable=True)     # Daily/Weekly/Rarely
+    reminder_style = Column(String, default='Gentle')    # Gentle/Motivational
+    advice_boundaries = Column(Text, default="[]")       # JSON multi-select
+    ai_trust_level = Column(Integer, nullable=True)      # 1-10 slider
+    
+    data_usage_consent = Column(Boolean, default=False)
+    emergency_disclaimer_accepted = Column(Boolean, default=False)
+    crisis_support_preference = Column(Boolean, default=True)
+    
+    updated_at = Column(String, default=lambda: datetime.utcnow().isoformat())
 
     user = relationship("User", back_populates="settings")
 
@@ -234,6 +285,13 @@ class PersonalProfile(Base):
     age = Column(Integer, nullable=True)
     
     last_updated = Column(String, default=lambda: datetime.now(UTC).isoformat())
+    # Wave 2 Phase 2.1: Lifestyle & Health
+    support_system = Column(Text, nullable=True)     # friends/family/colleagues
+    social_interaction_freq = Column(String, nullable=True) # Daily/Weekly/Rarely
+    exercise_freq = Column(String, nullable=True)     # Daily/Weekly/Monthly/None
+    dietary_patterns = Column(String, nullable=True)  # Balanced/Unbalanced/Vegetarian/etc.
+    
+    last_updated = Column(String, default=lambda: datetime.utcnow().isoformat())
 
     user = relationship("User", back_populates="personal_profile")
 
@@ -260,6 +318,15 @@ class UserStrengths(Base):
     goals = Column(Text, nullable=True)
     
     last_updated = Column(String, default=lambda: datetime.now(UTC).isoformat())
+    # Wave 2 Phase 2.2: Goals & Vision
+    short_term_goals = Column(Text, nullable=True)
+    long_term_vision = Column(Text, nullable=True)
+    primary_help_area = Column(String, nullable=True)
+
+    # Wave 2 Phase 2.1: Calibration
+    relationship_stress = Column(Integer, nullable=True) # 1-10 slider
+    
+    last_updated = Column(String, default=lambda: datetime.utcnow().isoformat())
 
     user = relationship("User", back_populates="strengths")
 

@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  trailingSlash: true,
+  generateBuildId: async () => 'soul-sense-stable',
+  // output: 'export',
   images: {
     unoptimized: true,
     remotePatterns: [

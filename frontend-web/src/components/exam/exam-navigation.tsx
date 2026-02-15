@@ -1,100 +1,93 @@
 'use client';
 
-import * as React from 'react';
-import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Send } from 'lucide-react';
+import { useExamStore } from '@/stores/examStore';
 import { cn } from '@/lib/utils';
 
 interface ExamNavigationProps {
-  onPrevious: () => void;
-  onNext: () => void;
   onSubmit: () => void;
-  canGoPrevious: boolean;
-  canGoNext: boolean;
-  isLastQuestion: boolean;
   isSubmitting?: boolean;
   className?: string;
+  canGoNext?: boolean;
 }
 
-export function ExamNavigation({
-  onPrevious,
-  onNext,
+export const ExamNavigation: React.FC<ExamNavigationProps> = ({
   onSubmit,
-  canGoPrevious,
-  canGoNext,
-  isLastQuestion,
   isSubmitting = false,
   className,
-}: ExamNavigationProps) {
+  canGoNext = true,
+}) => {
+  const {
+    previousQuestion,
+    nextQuestion,
+    getIsFirstQuestion,
+    getIsLastQuestion,
+  } = useExamStore();
 
-  // Keyboard Shortcuts
-  React.useEffect(() => {
+  const isFirst = getIsFirstQuestion();
+  const isLast = getIsLastQuestion();
+  
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
 
-      if (e.key === 'ArrowLeft' && canGoPrevious) {
-        onPrevious();
+      if (e.key === 'ArrowLeft' && !isFirst) {
+        previousQuestion();
       }
-      if (e.key === 'ArrowRight' && canGoNext && !isLastQuestion) {
-        onNext();
+      
+      if (e.key === 'ArrowRight' && canGoNext && !isLast) {
+        nextQuestion();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canGoPrevious, canGoNext, isLastQuestion, onPrevious, onNext]);
+  }, [isFirst, canGoNext, isLast, previousQuestion, nextQuestion]);
 
   return (
-    <div className={cn("flex w-full items-center justify-between py-4", className)}>
-      <button
-        onClick={onPrevious}
-        disabled={!canGoPrevious || isSubmitting}
-        className={cn(
-          "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-          "border border-slate-200 bg-white hover:bg-slate-100 text-slate-900",
-          "dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-800 dark:text-slate-100",
-          "disabled:opacity-50 disabled:pointer-events-none"
-        )}
+    <div className={cn('flex items-center justify-between', className)}>
+      <Button
+        variant="outline"
+        onClick={previousQuestion}
+        disabled={isFirst || isSubmitting}
+        className="flex items-center gap-2"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4" />
         Previous
-      </button>
+      </Button>
 
-      {isLastQuestion ? (
-        <button
-          onClick={onSubmit}
-          disabled={isSubmitting}
-          className={cn(
-            "flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-medium text-white transition-colors",
-            "bg-green-600 hover:bg-green-700",
-            "disabled:opacity-50 disabled:pointer-events-none"
-          )}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            <>
-              Submit Exam
-              <Check className="h-4 w-4" />
-            </>
-          )}
-        </button>
-      ) : (
-        <button
-          onClick={onNext}
-          disabled={!canGoNext || isSubmitting}
-          className={cn(
-            "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors",
-            "bg-blue-600 hover:bg-blue-700",
-            "disabled:opacity-50 disabled:pointer-events-none"
-          )}
-        >
-          Next
-          <ArrowRight className="h-4 w-4" />
-        </button>
-      )}
+      <div className="flex items-center gap-2">
+        {!isLast ? (
+          <Button
+            onClick={nextQuestion}
+            disabled={!canGoNext || isSubmitting}
+            className="flex items-center gap-2"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            onClick={onSubmit}
+            disabled={isSubmitting}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Submit Exam
+              </>
+            )}
+          </Button>
+        )}
+      </div>
     </div>
   );
-}
+};

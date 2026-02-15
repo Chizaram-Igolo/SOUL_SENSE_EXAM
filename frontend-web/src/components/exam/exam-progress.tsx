@@ -75,25 +75,20 @@ export const ExamProgress: React.FC<ExamProgressProps> = ({
             const isCurrent = questionNum === current;
 
             return (
-              <motion.div
+              <Button
                 key={questionNum}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+                variant={isCurrent ? 'default' : isAnswered ? 'secondary' : 'outline'}
+                size="icon"
+                onClick={() => onJumpToQuestion?.(questionNum)}
+                className={cn(
+                  'h-9 w-9 rounded-full text-xs font-semibold transition-all transform transition-transform hover:scale-105 active:scale-95',
+                  isCurrent && 'ring-2 ring-primary ring-offset-2 dark:ring-offset-slate-900',
+                  isAnswered && !isCurrent && 'opacity-75 hover:opacity-100'
+                )}
+                title={`Jump to Question ${questionNum}${isAnswered ? ' (answered)' : ''}`}
               >
-                <Button
-                  variant={isCurrent ? 'default' : isAnswered ? 'secondary' : 'outline'}
-                  size="icon"
-                  onClick={() => onJumpToQuestion?.(questionNum)}
-                  className={cn(
-                    'h-9 w-9 rounded-full text-xs font-semibold transition-all',
-                    isCurrent && 'ring-2 ring-primary ring-offset-2 dark:ring-offset-slate-900',
-                    isAnswered && !isCurrent && 'opacity-75 hover:opacity-100'
-                  )}
-                  title={`Jump to Question ${questionNum}${isAnswered ? ' (answered)' : ''}`}
-                >
-                  {questionNum}
-                </Button>
-              </motion.div>
+                {questionNum}
+              </Button>
             );
           })}
         </motion.div>

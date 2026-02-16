@@ -31,7 +31,7 @@ export default function GaugeDemoPage() {
                             value={score}
                             max={100}
                             step={1}
-                            onChange={(val: number) => setScore(val)}
+                            onChange={setScore}
                         />
                     </div>
                 </CardContent>

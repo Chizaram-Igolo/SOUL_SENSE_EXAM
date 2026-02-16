@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import List, Optional, Any, cast
 from sqlalchemy.orm import Session
 from ..root_models import Score, Response, Question, QuestionCategory
 from ..schemas import DetailedExamResult, CategoryScore, Recommendation
@@ -99,7 +99,7 @@ class AssessmentResultsService:
             assessment_id=score.id,
             total_score=float(score.total_score),
             max_possible_score=total_max,
-            overall_percentage=round(float(overall_pct), 1),
+            overall_percentage=round(cast(Any, overall_pct), 1),
             timestamp=score.timestamp,
             category_breakdown=breakdown,
             recommendations=recommendations

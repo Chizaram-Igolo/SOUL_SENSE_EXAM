@@ -25,13 +25,13 @@ def auth_headers(temp_db: Session):
     auth = AuthManager()
     auth.register_user(username, email, "Analytics", "User", 30, "M", password)
 
-    # Login
-    response = client.post(
-        "/api/v1/auth/login",
-        data={"username": username, "password": password}
-    )
-    assert response.status_code == 200
-    token = response.json()["access_token"]
+    # Fetch user object
+    user = temp_db.query(User).filter_by(username=username).first()
+
+    # Generate token manually to bypass CAPTCHA in tests
+    from backend.fastapi.api.services.auth_service import AuthService
+    auth_service = AuthService(temp_db)
+    token = auth_service.create_access_token(data={"sub": username})
 
     return {"Authorization": f"Bearer {token}"}
 
@@ -102,11 +102,13 @@ def test_data_isolation(auth_headers, temp_db, user_id):
     auth.register_user(
         "intruder", "intruder@example.com", "Bad", "Guy", 25, "M", "Pass1234!"
     )
-    login_resp = client.post(
-        "/api/v1/auth/login",
-        data={"username": "intruder", "password": "Pass1234!"}
-    )
-    intruder_token = login_resp.json()["access_token"]
+    # Fetch intruder user from DB
+    intruder_user = temp_db.query(User).filter_by(username="intruder").first()
+    
+    # Generate token manually to bypass CAPTCHA
+    from backend.fastapi.api.services.auth_service import AuthService
+    auth_service = AuthService(temp_db)
+    intruder_token = auth_service.create_access_token(data={"sub": intruder_user.username})
     intruder_headers = {"Authorization": f"Bearer {intruder_token}"}
 
     # User B calls summary

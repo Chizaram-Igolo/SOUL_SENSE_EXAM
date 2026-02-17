@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/sessionStorage';
 import { authApi } from '@/lib/api/auth';
 import { Loader } from '@/components/ui';
+import { isValidCallbackUrl } from '@/lib/utils/url';
 
 interface AuthContextType {
   user: UserSession['user'] | null;
@@ -52,28 +53,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     setMounted(true);
-    try {
-      // Check for existing session on mount
-      const session = getSession();
-      if (session) {
-        setUser(session.user);
-      }
+    const initAuth = async () => {
+      try {
+        // 1. Check if server has restarted
+        await checkServerInstance();
 
-      // Check if backend is in mock mode (from main)
-      checkMockMode();
-    } catch (e) {
-      console.warn('Auth initialization error:', e);
-    } finally {
-      // Small delay to ensure state propagates
-      const timer = setTimeout(() => setIsLoading(false), 50);
-      return () => clearTimeout(timer);
-    }
+        // 2. Check for existing session
+        const session = getSession();
+        if (session) {
+          setUser(session.user);
+        }
+
+        // 3. Check if backend is in mock mode
+        await checkMockMode();
+      } catch (e) {
+        console.warn('Auth initialization error:', e);
+      } finally {
+        // Small delay to ensure state propagates
+        const timer = setTimeout(() => setIsLoading(false), 50);
+        return () => clearTimeout(timer);
+      }
+    };
+
+    initAuth();
   }, []);
+
+  const checkServerInstance = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v1/auth/server-id`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const { server_id } = await response.json();
+        const storedId = localStorage.getItem('soul_sense_server_instance_id');
+
+        if (storedId && server_id && storedId !== server_id) {
+          console.log('🔄 Server restart detected. Clearing stale session.');
+          clearSession();
+          setUser(null);
+        }
+
+        if (server_id) {
+          localStorage.setItem('soul_sense_server_instance_id', server_id);
+        }
+      }
+    } catch (error) {
+      console.warn('Could not verify server instance:', error);
+    }
+  };
 
   const checkMockMode = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/v1/health`, {
+      const response = await fetch(`${apiUrl}/health`, {
         method: 'GET',
       });
 
@@ -95,7 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     rememberMe: boolean,
     shouldRedirect = true,
-    redirectTo = '/dashboard',
+    redirectTo = '/',
     stayLoadingOnSuccess = false
   ) => {
     setIsLoading(true);
@@ -108,10 +142,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const session: UserSession = {
         user: {
-          id: 'current',
+          id: result.id?.toString() || 'current',
           email: (result.email ||
             (loginData.username.includes('@') ? loginData.username : '')) as string,
           name: result.username || loginData.username.split('@')[0],
+          username: result.username,
+          created_at: result.created_at,
         },
         token: result.access_token,
         expiresAt: getExpiryTimestamp(),
@@ -121,8 +157,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session.user);
 
       if (shouldRedirect) {
-        console.log(`useAuth: Navigation to ${redirectTo} triggered`);
-        router.push(redirectTo);
+        const finalRedirect = isValidCallbackUrl(redirectTo) ? redirectTo : '/';
+        console.log(`useAuth: Navigation to ${finalRedirect} triggered`);
+        router.push(finalRedirect);
       }
 
       // If we are redirecting and want to stay loading, we don't clear it here
@@ -141,7 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     data: { pre_auth_token: string; code: string },
     rememberMe: boolean,
     shouldRedirect = true,
-    redirectTo = '/dashboard',
+    redirectTo = '/',
     stayLoadingOnSuccess = false
   ) => {
     setIsLoading(true);
@@ -150,9 +187,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const session: UserSession = {
         user: {
-          id: 'current',
+          id: result.id?.toString() || 'current',
           email: (result.email || '') as string,
           name: result.username || 'User',
+          username: result.username,
+          created_at: result.created_at,
         },
         token: result.access_token,
         expiresAt: getExpiryTimestamp(),
@@ -162,7 +201,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session.user);
 
       if (shouldRedirect) {
-        router.push(redirectTo);
+        const finalRedirect = isValidCallbackUrl(redirectTo) ? redirectTo : '/';
+        router.push(finalRedirect);
       }
 
       if (stayLoadingOnSuccess) return result;

@@ -262,13 +262,13 @@ export function FloatingNavbar() {
           ) : (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
-                href="/login"
+                href="/register"
                 className={cn(
                   'px-6 py-2 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full transition-all shadow-lg',
                   'bg-slate-950 dark:bg-white text-white dark:text-slate-900 hover:bg-sky-600 dark:hover:bg-sky-50 shadow-slate-900/10 dark:shadow-white/5'
                 )}
               >
-                Sign In
+                Sign Up
               </Link>
             </motion.div>
           )}

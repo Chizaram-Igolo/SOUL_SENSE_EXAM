@@ -35,6 +35,7 @@ import { ApiError } from '@/lib/api/errors';
 import { useRateLimiter } from '@/hooks/useRateLimiter';
 import { analyticsApi } from '@/lib/api/analytics';
 import { useAuth } from '@/hooks/useAuth';
+import { isValidCallbackUrl } from '@/lib/utils/url';
 
 type RegisterFormData = z.infer<typeof registrationSchema>;
 
@@ -522,13 +523,14 @@ export default function RegisterPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
   // Guard: Redirect if already logged in
   useEffect(() => {
     if (!authLoading && isAuthenticated && !isLoading) {
-      router.push(callbackUrl);
+      const finalRedirect = isValidCallbackUrl(callbackUrl) ? callbackUrl : '/';
+      router.push(finalRedirect);
     }
   }, [isAuthenticated, authLoading, isLoading, router, callbackUrl]);
 

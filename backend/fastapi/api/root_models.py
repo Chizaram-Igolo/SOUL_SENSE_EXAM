@@ -50,6 +50,7 @@ UserSession = _models_module.UserSession
 SatisfactionRecord = _models_module.SatisfactionRecord
 SatisfactionHistory = _models_module.SatisfactionHistory
 AssessmentResult = _models_module.AssessmentResult
+AuditLog = _models_module.AuditLog
 
 # Export all for easy discovery
 __all__ = [
@@ -75,4 +76,5 @@ __all__ = [
     'SatisfactionRecord',
     'SatisfactionHistory',
     'AssessmentResult',
+    'AuditLog',
 ]

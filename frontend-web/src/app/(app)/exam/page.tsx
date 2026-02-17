@@ -1,23 +1,24 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui';
 import { useExamStore } from '@/stores/examStore';
-
-type ExamHistoryItem = {
-  id: string | number;
-  completed_at: string;
-  overall_score: number;
-};
+import { useApi, useOnlineStatus } from '@/hooks/useApi';
+import { resultsApi } from '@/lib/api/results';
+import { Skeleton, OfflineBanner } from '@/components/common';
 
 const QUESTION_COUNT = 20;
 const ESTIMATED_TIME = '15-20 minutes';
-const HISTORY_KEY = 'exam-history';
 
 export default function ExamPage() {
   const router = useRouter();
-  const [history, setHistory] = useState<ExamHistoryItem[]>([]);
+  const isOnline = useOnlineStatus();
+
+  const { data: historyData, loading: historyLoading } = useApi({
+    apiFn: () => resultsApi.getHistory(1, 5),
+    deps: [],
+  });
 
   const {
     questions,
@@ -36,24 +37,6 @@ export default function ExamPage() {
     if (!_hasHydrated) return false;
     return questions.length > 0 && !isCompleted && Boolean(startTime);
   }, [_hasHydrated, questions.length, isCompleted, startTime]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      const stored = localStorage.getItem(HISTORY_KEY);
-      if (!stored) return;
-
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        setHistory(parsed as ExamHistoryItem[]);
-      } else if (parsed?.results && Array.isArray(parsed.results)) {
-        setHistory(parsed.results as ExamHistoryItem[]);
-      }
-    } catch (error) {
-      console.warn('Failed to parse exam history from storage.', error);
-    }
-  }, []);
 
   const handleStartAssessment = () => {
     resetExam();
@@ -95,7 +78,7 @@ export default function ExamPage() {
           <div className="space-y-6">
             <div className="space-y-3">
               <p className="text-sm uppercase tracking-[0.2em] text-emerald-700/80">Assessment</p>
-              <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
+              <h1 className="text-4xl font-semibold tracking-tight text-foreground">
                 EQ Assessment
               </h1>
               <p className="text-muted-foreground text-base leading-relaxed">
@@ -126,21 +109,23 @@ export default function ExamPage() {
             className="bg-[linear-gradient(135deg,var(--calm-1),var(--calm-2),var(--calm-3))]"
           >
             <CardHeader>
-              <CardTitle className="text-2xl text-slate-900">Assessment Details</CardTitle>
+              <CardTitle className="text-2xl text-foreground">Assessment Details</CardTitle>
               <CardDescription>Know what to expect before you begin.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Estimated time</span>
-                <span className="text-sm font-semibold text-slate-900">{ESTIMATED_TIME}</span>
+                <span className="text-sm font-semibold text-foreground">{ESTIMATED_TIME}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Number of questions</span>
-                <span className="text-sm font-semibold text-slate-900">{QUESTION_COUNT}</span>
+                <span className="text-sm font-semibold text-foreground">{QUESTION_COUNT}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Format</span>
-                <span className="text-sm font-semibold text-slate-900">Likert scale responses</span>
+                <span className="text-sm font-semibold text-foreground">
+                  Likert scale responses
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -215,25 +200,41 @@ export default function ExamPage() {
               <CardDescription>Your recent results appear here.</CardDescription>
             </CardHeader>
             <CardContent>
-              {history.length === 0 ? (
+              {!isOnline && <OfflineBanner className="mb-4" />}
+              {historyLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0"
+                    >
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  ))}
+                </div>
+              ) : !historyData?.assessments?.length ? (
                 <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
                   No past exams yet. Complete your first assessment to see your history.
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {history.slice(0, 3).map((item) => (
+                  {historyData.assessments.slice(0, 5).map((item) => (
                     <div
                       key={item.id}
                       className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 last:border-b-0 last:pb-0"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          Completed {formatDate(item.completed_at)}
+                        <p className="text-sm font-semibold text-foreground">
+                          Completed {formatDate(item.timestamp)}
                         </p>
                         <p className="text-xs text-muted-foreground">Assessment ID: {item.id}</p>
                       </div>
                       <span className="text-sm font-semibold text-emerald-700">
-                        Score {item.overall_score}%
+                        Score {item.total_score}%
                       </span>
                     </div>
                   ))}

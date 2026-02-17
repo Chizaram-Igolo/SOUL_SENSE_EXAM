@@ -29,6 +29,11 @@ async def get_captcha():
     code = captcha_service.generate_captcha(session_id)
     return CaptchaResponse(captcha_code=code, session_id=session_id)
 
+@router.get("/server-id")
+async def get_server_id(request: Request):
+    """Return the current server instance ID. Changes on every server restart."""
+    return {"server_id": getattr(request.app.state, "server_instance_id", None)}
+
 # oauth2_scheme is still needed for other endpoints but login now uses custom JSON
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
@@ -43,7 +48,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # Pydantic schema validation for TokenData could be used here
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         username: str = payload.get("sub")
         if not username:
@@ -180,6 +184,8 @@ async def login(
     "refresh_token": refresh_token,
     "username": user.username,
     "email": user.personal_profile.email if user.personal_profile else None,
+    "id": user.id,
+    "created_at": user.created_at,
     "warnings": (
         [{
             "code": "MULTIPLE_SESSIONS_ACTIVE",
@@ -226,6 +232,8 @@ async def verify_2fa(
     "refresh_token": refresh_token,
     "username": user.username,
     "email": user.personal_profile.email if user.personal_profile else None,
+    "id": user.id,
+    "created_at": user.created_at.isoformat() if user.created_at else None,
     "warnings": (
         [{
             "code": "MULTIPLE_SESSIONS_ACTIVE",

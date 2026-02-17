@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { UseFormReturn } from 'react-hook-form';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/lib/api/auth';
+import { isValidCallbackUrl } from '@/lib/utils/url';
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -21,7 +22,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/a
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
   const { login, login2FA, isAuthenticated, isLoading: authLoading, setIsLoading } = useAuth();
 
   // UI State
@@ -34,29 +35,36 @@ export default function LoginPage() {
   // CAPTCHA State
   const [captchaCode, setCaptchaCode] = useState<string>('');
   const [sessionId, setSessionId] = useState<string>('');
+  const [captchaError, setCaptchaError] = useState<string>('');
   const [captchaLoading, setCaptchaLoading] = useState<boolean>(false);
 
-  // Guard: Redirect if already logged in
   // Only redirect if not currently logging in to avoid race conditions
   useEffect(() => {
     if (!authLoading && isAuthenticated && !isLoggingIn) {
-      router.push(callbackUrl);
+      const finalRedirect = isValidCallbackUrl(callbackUrl) ? callbackUrl : '/';
+      router.push(finalRedirect);
     }
   }, [isAuthenticated, authLoading, isLoggingIn, router, callbackUrl]);
 
   // Fetch CAPTCHA on mount
-  const fetchCaptcha = async () => {
+  async function fetchCaptcha() {
     setCaptchaLoading(true);
+    setCaptchaError('');
     try {
       const data = await authApi.getCaptcha();
+      // Ensure data exists
+      if (!data?.captcha_code) {
+        throw new Error('Empty response from server');
+      }
       setCaptchaCode(data.captcha_code);
       setSessionId(data.session_id);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch CAPTCHA:', error);
+      setCaptchaError(error.message || 'Failed to load');
     } finally {
       setCaptchaLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
     fetchCaptcha();
@@ -417,15 +425,16 @@ export default function LoginPage() {
                 className="space-y-2"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 h-12 bg-gray-100 rounded-md border flex items-center justify-center relative overflow-hidden">
-                    {/* Noise/Pattern Background for Security Aesthetics */}
+                  <div className="flex-1 h-12 bg-white dark:bg-gray-800 rounded-md border flex items-center justify-center relative overflow-hidden">
+                    {/* Noise/Pattern Background - Removed for visibility stability
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                    */}
 
                     {captchaLoading ? (
                       <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
                     ) : (
-                      <span className="font-mono text-2xl font-bold text-gray-700 tracking-widest select-none">
-                        {captchaCode}
+                      <span className="font-mono text-xl font-bold text-gray-900 dark:text-gray-100 tracking-[0.5em] select-none relative z-10">
+                        {captchaCode || '.....'}
                       </span>
                     )}
                   </div>
@@ -441,6 +450,9 @@ export default function LoginPage() {
                     <RefreshCw className={`h-4 w-4 ${captchaLoading ? 'animate-spin' : ''}`} />
                   </Button>
                 </div>
+                {captchaError && (
+                  <p className="text-xs text-red-500 font-mono mt-1">Debug: {captchaError}</p>
+                )}
 
                 <FormField
                   control={methods.control}

@@ -337,6 +337,72 @@ export default function ResultsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* High-Priority Recommendations Section */}
+      {highPriorityRecs.length > 0 && (
+        <section>
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold">Top Priorities</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Focus on these high-priority recommendations for maximum impact
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {highPriorityRecs.map((rec, index) => (
+              <RecommendationCard
+                key={`high-${rec.category_name}-${index}`}
+                recommendation={rec}
+                showAnimation={true}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* All Recommendations Section */}
+      {recommendations.length > 0 ? (
+        <section>
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold">All Recommendations</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Personalized insights based on your assessment results
+            </p>
+          </div>
+          <div className="space-y-4">
+            {recommendations.map((rec, index) => (
+              <RecommendationCard
+                key={`${rec.category_name}-${index}`}
+                recommendation={rec}
+                showAnimation={true}
+              />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <EmptyState
+          title="No Recommendations Available"
+          description="Complete an assessment to receive personalized recommendations."
+        />
+      )}
+
+      {/* Next Steps */}
+      <div className="rounded-lg border bg-muted/50 p-6">
+        <h3 className="font-semibold mb-2">What&apos;s Next?</h3>
+        <ul className="space-y-2 text-sm text-muted-foreground">
+          <li className="flex items-start gap-2">
+            <span className="text-blue-500 mt-0.5">•</span>
+            <span>Review each recommendation and click to expand for more details</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-500 mt-0.5">•</span>
+            <span>Start with high-priority items for the most significant improvement</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-500 mt-0.5">•</span>
+            <span>Retake the assessment in 2-4 weeks to track your progress</span>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

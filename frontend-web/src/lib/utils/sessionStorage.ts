@@ -9,7 +9,9 @@ export interface UserSession {
   user: {
     id: string;
     email: string;
+    username?: string;
     name?: string;
+    created_at?: string;
   };
   token: string;
   expiresAt: number;

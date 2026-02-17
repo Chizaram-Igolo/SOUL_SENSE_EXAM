@@ -318,9 +318,17 @@ class JournalEntry(Base):
     title = Column(String, nullable=True)
     content = Column(Text, nullable=False)
     sentiment_score = Column(Float, default=0.0)
+    emotional_patterns = Column(Text, nullable=True) # JSON list
     timestamp = Column(String, default=lambda: datetime.now(UTC).isoformat())
+    entry_date = Column(String, nullable=True) # For legacy/charting
     category = Column(String, nullable=True)
     mood_score = Column(Integer, nullable=True) # 1-10
+    sleep_hours = Column(Float, nullable=True)
+    sleep_quality = Column(Integer, nullable=True)
+    energy_level = Column(Integer, nullable=True)
+    work_hours = Column(Float, nullable=True)
+    stress_level = Column(Integer, nullable=True)
+    screen_time_mins = Column(Integer, nullable=True)
     daily_schedule = Column(Text, nullable=True)
     tags = Column(Text, nullable=True)
     is_deleted = Column(Boolean, default=False)

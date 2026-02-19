@@ -1,34 +1,144 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { BentoGrid } from '@/components/dashboard/bento-grid';
+import {
+  WelcomeCard,
+  QuickActions,
+  MoodWidget,
+  RecentActivity,
+  InsightCard,
+  DashboardSkeleton,
+} from '@/components/dashboard';
+import { SectionWrapper } from '@/components/dashboard/section-wrapper';
+import { apiClient } from '@/lib/api/client';
+import { useAuth } from '@/hooks/useAuth';
+
+interface DashboardData {
+  profile: any | null;
+  exams: any[];
+  journals: any[];
+  mood: any | null;
+  insights: Array<{ title: string; description: string; type: string }>;
+}
+
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const [data, setData] = useState<DashboardData>({
+    profile: null,
+    exams: [],
+    journals: [],
+    mood: null,
+    insights: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [examsRes, journalsRes] = await Promise.all([
+        apiClient<any>('/exams/history?page=1&page_size=5').catch(() => ({ assessments: [] })),
+        apiClient<any>('/journal/?limit=5').catch(() => ({ entries: [] })),
+      ]);
+
+      setData({
+        profile: user,
+        exams: examsRes.assessments || [],
+        journals: journalsRes.entries || [],
+        mood: null,
+        insights: [
+          {
+            title: 'Sleep Pattern',
+            description: 'You tend to score higher on EQ assessments when you get 7+ hours of sleep.',
+            type: 'trend',
+          },
+          {
+            title: 'Mindfulness Tip',
+            description: 'Try a 5-minute breathing exercise before your next exam to reduce anxiety.',
+            type: 'tip',
+          },
+        ],
+      });
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [user]);
+
+  if (loading && !data.profile) {
+    return (
+      <div className="p-4 md:p-8 space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-2">Loading your overview...</p>
+        </div>
+        <DashboardSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Welcome back! Here&apos;s your dashboard overview.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="font-semibold text-sm">Total Tests Taken</h3>
-          <p className="text-3xl font-bold mt-2">8</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="font-semibold text-sm">Average Score</h3>
-          <p className="text-3xl font-bold mt-2">78%</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="font-semibold text-sm">Journal Entries</h3>
-          <p className="text-3xl font-bold mt-2">24</p>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <h3 className="font-semibold text-sm">Streak</h3>
-          <p className="text-3xl font-bold mt-2">5 days</p>
+    <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            SoulSense Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-2 text-lg">
+            Welcome back, {user?.name || 'User'}. Here&apos;s your mental wellbeing at a glance.
+          </p>
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-        <p className="text-muted-foreground">Your recent activity will appear here.</p>
-      </div>
+      <BentoGrid className="auto-rows-[20rem]">
+        {/* Row 1 */}
+        <SectionWrapper isLoading={loading} error={error} onRetry={fetchData}>
+          <WelcomeCard />
+        </SectionWrapper>
+
+        <SectionWrapper isLoading={loading} error={error} onRetry={fetchData}>
+          <QuickActions />
+        </SectionWrapper>
+
+        {/* Row 2 */}
+        <SectionWrapper isLoading={loading} error={error} onRetry={fetchData}>
+          <MoodWidget />
+        </SectionWrapper>
+
+        <SectionWrapper isLoading={loading} error={error} onRetry={fetchData}>
+          <RecentActivity />
+        </SectionWrapper>
+
+        {/* AI Insights - Multiple */}
+        {data.insights.map((insight, idx) => (
+          <SectionWrapper key={`insight-${idx}`} isLoading={loading} error={error} onRetry={fetchData}>
+            <InsightCard
+              title={insight.title}
+              description={insight.description}
+              type={insight.type as any}
+              className="md:col-span-1"
+            />
+          </SectionWrapper>
+        ))}
+
+        {/* Additional Insight or Filler */}
+        <SectionWrapper isLoading={loading} error={error} onRetry={fetchData}>
+          <InsightCard
+            title="Security & Privacy"
+            description="Your data is encrypted and only accessible by you. We prioritize your privacy."
+            type="safety"
+            className="md:col-span-1"
+          />
+        </SectionWrapper>
+      </BentoGrid>
     </div>
   );
 }

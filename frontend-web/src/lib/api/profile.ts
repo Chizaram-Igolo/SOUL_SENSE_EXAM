@@ -10,6 +10,13 @@ export interface PersonalProfile {
   email?: string;
   occupation?: string;
   education_level?: string;
+  bio?: string;
+  avatar_url?: string;
+  member_since?: string;
+  eq_stats?: {
+    last_score?: number;
+    total_assessments?: number;
+  };
 }
 
 export interface MedicalProfile {
@@ -39,6 +46,43 @@ export interface UpdateSettings {
   notifications_enabled?: boolean;
   email_notifications?: boolean;
   language?: string;
+}
+
+export interface UserProfile {
+  id: number;
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  bio: string;
+  age: number;
+  gender: string;
+  avatar_url: string;
+  goals: {
+    short_term: string;
+    long_term: string;
+  };
+  preferences: {
+    notification_frequency: string;
+    theme: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateUserProfile {
+  first_name?: string;
+  last_name?: string;
+  bio?: string;
+  age?: number;
+  gender?: string;
+  goals?: {
+    short_term?: string;
+    long_term?: string;
+  };
+  preferences?: {
+    notification_frequency?: string;
+    theme?: string;
+  };
 }
 
 export const profileApi = {
@@ -97,6 +141,37 @@ export const profileApi = {
     return apiClient('/profiles/settings', {
       method: 'PUT',
       body: JSON.stringify(data),
+    });
+  },
+
+  async getUserProfile(): Promise<UserProfile> {
+    return deduplicateRequest('profile-me', () => apiClient<UserProfile>('/profiles/me'));
+  },
+
+  async updateUserProfile(data: UpdateUserProfile): Promise<UserProfile> {
+    return apiClient<UserProfile>('/profiles/me', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async uploadAvatar(file: File): Promise<{ avatar_url: string }> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    return apiClient('/profiles/me/avatar', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Let the browser set the Content-Type for FormData
+        'Content-Type': undefined,
+      },
+    });
+  },
+
+  async deleteAvatar(): Promise<void> {
+    return apiClient('/profiles/me/avatar', {
+      method: 'DELETE',
     });
   },
 };

@@ -25,7 +25,7 @@ export interface JournalListResponse {
 export interface CreateJournalEntry {
   content: string;
   tags?: string[];
-  privacy_level?: string;
+  mood_rating?: number;
   energy_level?: number;
   stress_level?: number;
   mood_rating?: number;

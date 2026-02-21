@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
-import { ThemeProvider, NavbarController } from '@/components/layout';
+import { ThemeProvider, NavbarController, BottomNavigation } from '@/components/layout';
 import { ToastProvider } from '@/components/ui';
 import { NetworkErrorBanner } from '@/components/common';
 import { AuthProvider } from '@/hooks/useAuth';
@@ -100,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div id="main-content" role="main" tabIndex={-1}>
                 {children}
               </div>
+              <BottomNavigation />
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>

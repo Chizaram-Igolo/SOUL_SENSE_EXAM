@@ -40,8 +40,9 @@ def create_app() -> FastAPI:
         allow_origins=origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Version"],
-        max_age=3600, # Cache preflight requests for 1 hour
+        allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        expose_headers=["X-API-Version"],
+        max_age=3600,  # Cache preflight requests for 1 hour
     )
     
     # Version header middleware

@@ -19,6 +19,7 @@ from fastapi import HTTPException, status
 
 # Import models from root_models module (handles namespace collision)
 from ..root_models import JournalEntry, User
+from .gamification_service import GamificationService
 
 
 # ============================================================================
@@ -192,6 +193,15 @@ class JournalService:
         # Attach dynamic fields
         entry.reading_time_mins = round(entry.word_count / 200, 2)
         
+        # Trigger Gamification
+        try:
+            GamificationService.award_xp(self.db, current_user.id, 50, "Journal entry")
+            GamificationService.update_streak(self.db, current_user.id, "journal")
+            GamificationService.check_achievements(self.db, current_user.id, "journal")
+        except Exception as e:
+            # Don't fail the whole request if gamification fails
+            print(f"Gamification update failed: {e}")
+            
         return entry
 
     def get_entries(

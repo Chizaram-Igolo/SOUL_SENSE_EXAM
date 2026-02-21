@@ -52,6 +52,11 @@ class User(Base):
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+    
+    # Gamification Relationships
+    achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan")
+    streaks = relationship("UserStreak", back_populates="user", cascade="all, delete-orphan")
+    xp_stats = relationship("UserXP", uselist=False, back_populates="user", cascade="all, delete-orphan")
 
 class LoginAttempt(Base):
     """Track login attempts for security auditing and persistent locking.
@@ -632,6 +637,87 @@ class ExportRecord(Base):
     expires_at = Column(DateTime, nullable=True)
 
     user = relationship("User")
+
+# ==================== GAMIFICATION MODELS ====================
+
+class Achievement(Base):
+    __tablename__ = 'achievements'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    achievement_id = Column(String(100), unique=True, index=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    icon = Column(String(500), nullable=True) # URL or emoji
+    category = Column(String(50), nullable=False) # consistency, awareness, intelligence
+    rarity = Column(String(20), default='common') # common, rare, epic, legendary
+    requirements = Column(Text, nullable=True) # JSON string of requirements
+    points_reward = Column(Integer, default=150)
+
+class UserAchievement(Base):
+    __tablename__ = 'user_achievements'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    achievement_id = Column(String(100), ForeignKey('achievements.achievement_id'), nullable=False)
+    progress = Column(Integer, default=0) # 0-100
+    unlocked = Column(Boolean, default=False)
+    unlocked_at = Column(DateTime, nullable=True)
+    
+    user = relationship("User", back_populates="achievements")
+    achievement = relationship("Achievement")
+
+class UserStreak(Base):
+    __tablename__ = 'user_streaks'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    activity_type = Column(String(50), default='combined')  # journal, assessment, combined
+    current_streak = Column(Integer, default=0)
+    longest_streak = Column(Integer, default=0)
+    last_activity_date = Column(DateTime, nullable=True)
+    streak_freeze_count = Column(Integer, default=0)
+    
+    user = relationship("User", back_populates="streaks")
+
+class UserXP(Base):
+    __tablename__ = 'user_xp'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), unique=True, index=True, nullable=False)
+    total_xp = Column(Integer, default=0)
+    current_level = Column(Integer, default=1)
+    xp_to_next_level = Column(Integer, default=500)
+    last_xp_awarded_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="xp_stats")
+
+class Challenge(Base):
+    """Weekly or Monthly Challenges for users to participate in."""
+    __tablename__ = 'challenges'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    challenge_type = Column(String(50)) # weekly, monthly, special
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    requirements = Column(Text) # JSON string
+    reward_xp = Column(Integer, default=200)
+    is_active = Column(Boolean, default=True)
+
+class UserChallenge(Base):
+    """Tracks user participation in challenges."""
+    __tablename__ = 'user_challenges'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, index=True)
+    challenge_id = Column(Integer, ForeignKey('challenges.id'), nullable=False)
+    status = Column(String(20), default='joined') # joined, completed, failed
+    progress = Column(Text) # JSON string
+    completed_at = Column(DateTime, nullable=True)
+    
+    user = relationship("User")
+    challenge = relationship("Challenge")
 
 # Initialize logger
 logging.basicConfig(level=logging.INFO)

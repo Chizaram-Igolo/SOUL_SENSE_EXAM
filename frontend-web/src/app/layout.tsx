@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import '@/styles/globals.css';
 import { ThemeProvider, NavbarController } from '@/components/layout';
@@ -6,6 +6,7 @@ import { ToastProvider } from '@/components/ui';
 import { NetworkErrorBanner } from '@/components/common';
 import { AuthProvider } from '@/hooks/useAuth';
 import { WebVitalsMonitor } from '@/components/monitoring/WebVitalsMonitor';
+import { SkipLinks } from '@/components/accessibility';
 import { OfflineBanner } from '@/components/offline';
 import { register } from '@/lib/offline';
 
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     'Professional Growth',
   ],
   authors: [{ name: 'Soul Sense Team' }],
+  authors: [{ name: 'Soul Sense' }],
   creator: 'Soul Sense',
   publisher: 'Soul Sense',
   formatDetection: {
@@ -52,6 +54,18 @@ export const metadata: Metadata = {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 5,
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+  colorScheme: 'light dark',
   manifest: '/manifest.json',
   themeColor: '#8b5cf6',
   viewport: {
@@ -77,12 +91,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem
           disableTransitionOnChange
         >
+          <SkipLinks />
           <ToastProvider>
             <AuthProvider>
               <OfflineBanner />
               <NetworkErrorBanner />
               <NavbarController />
-              {children}
+              <div id="main-content" role="main" tabIndex={-1}>
+                {children}
+              </div>
             </AuthProvider>
           </ToastProvider>
         </ThemeProvider>

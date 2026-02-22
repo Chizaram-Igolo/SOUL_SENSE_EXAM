@@ -79,9 +79,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
 
     # CORS middleware
-    # If in production, ensure we are not allowing all origins blindly unless intended
     origins = settings.BACKEND_CORS_ORIGINS
-    
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -97,7 +95,7 @@ def create_app() -> FastAPI:
     
     # Register V1 API Router
     app.include_router(api_v1_router, prefix="/api/v1")
- 
+
     # Register Health endpoints at root level for orchestration
     app.include_router(health_router, tags=["Health"])
 

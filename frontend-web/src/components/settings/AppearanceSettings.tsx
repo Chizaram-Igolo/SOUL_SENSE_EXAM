@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from '../ui';
 import { useDebounce } from '../../hooks/useDebounce';
 import { ThemeToggle } from './theme-toggle';
+import { Sun, Moon, Monitor, Type, Eye } from 'lucide-react';
 
 interface AppearanceSettingsProps {
   settings: UserSettings;
@@ -37,7 +38,7 @@ export function AppearanceSettings({ settings, onChange }: AppearanceSettingsPro
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       {/* Theme Selection */}
       <ThemeToggle
         value={settings.theme as 'light' | 'dark' | 'system'}
@@ -45,47 +46,58 @@ export function AppearanceSettings({ settings, onChange }: AppearanceSettingsPro
       />
 
       {/* Font Size */}
-      <div className="space-y-3">
-        <div>
-          <h3 className="text-sm font-medium">Font Size</h3>
-          <p className="text-xs text-muted-foreground">Adjust text size for better readability</p>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-muted-foreground/60">
+          <Type className="h-3.5 w-3.5" />
+          <h3 className="text-[10px] uppercase tracking-widest font-black">Content Typography</h3>
         </div>
         <Select value={settings.accessibility.font_size} onValueChange={handleFontSizeChange}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full h-12 rounded-xl bg-muted/10 border-border/40">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="small">Small</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="large">Large</SelectItem>
+          <SelectContent className="rounded-xl border-border/40">
+            <SelectItem value="small">Comfortable (Small)</SelectItem>
+            <SelectItem value="medium">Standard (Medium)</SelectItem>
+            <SelectItem value="large">Spacious (Large)</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Accessibility Options */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium">Accessibility</h3>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium">High Contrast</p>
-            <p className="text-xs text-muted-foreground">Increase contrast for better visibility</p>
-          </div>
-          <Checkbox
-            checked={settings.accessibility.high_contrast}
-            onChange={(e) => handleAccessibilityChange('high_contrast', e.target.checked)}
-          />
+        <div className="flex items-center gap-2 text-muted-foreground/60">
+          <Eye className="h-3.5 w-3.5" />
+          <h3 className="text-[10px] uppercase tracking-widest font-black">Visual Accessibility</h3>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium">Reduced Motion</p>
-            <p className="text-xs text-muted-foreground">Minimize animations and transitions</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-border/40 group hover:border-border transition-colors">
+            <div className="space-y-0.5">
+              <p className="text-sm font-bold">High Contrast</p>
+              <p className="text-[10px] text-muted-foreground font-medium">
+                Prioritize legibility over aesthetics
+              </p>
+            </div>
+            <Checkbox
+              checked={settings.accessibility.high_contrast}
+              onCheckedChange={(checked) => handleAccessibilityChange('high_contrast', !!checked)}
+              className="h-5 w-5 rounded-lg border-2 border-border/60"
+            />
           </div>
-          <Checkbox
-            checked={settings.accessibility.reduced_motion}
-            onChange={(e) => handleAccessibilityChange('reduced_motion', e.target.checked)}
-          />
+
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/10 border border-border/40 group hover:border-border transition-colors">
+            <div className="space-y-0.5">
+              <p className="text-sm font-bold">Reduced Motion</p>
+              <p className="text-[10px] text-muted-foreground font-medium">
+                Minimize animations and transitions
+              </p>
+            </div>
+            <Checkbox
+              checked={settings.accessibility.reduced_motion}
+              onCheckedChange={(checked) => handleAccessibilityChange('reduced_motion', !!checked)}
+              className="h-5 w-5 rounded-lg border-2 border-border/60"
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { UserSettings } from '@/lib/api/settings';
+import { UserSettings } from '../../lib/api/settings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
@@ -63,7 +63,7 @@ export function AccountSettings({ settings, onChange }: AccountSettingsProps) {
             </Label>
             <Select
               value={settings.account.language}
-              onValueChange={(value) => handleAccountChange('language', value)}
+              onValueChange={(value: string) => handleAccountChange('language', value)}
             >
               <SelectTrigger className="w-full h-11 rounded-xl bg-muted/10 border-border/40">
                 <SelectValue />
@@ -85,7 +85,7 @@ export function AccountSettings({ settings, onChange }: AccountSettingsProps) {
             </Label>
             <Select
               value={settings.account.timezone}
-              onValueChange={(value) => handleAccountChange('timezone', value)}
+              onValueChange={(value: string) => handleAccountChange('timezone', value)}
             >
               <SelectTrigger className="w-full h-11 rounded-xl bg-muted/10 border-border/40">
                 <SelectValue />
@@ -97,6 +97,27 @@ export function AccountSettings({ settings, onChange }: AccountSettingsProps) {
                 <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
                 <SelectItem value="Europe/London">London</SelectItem>
                 <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
+                <SelectItem value="Asia/Shanghai">Shanghai</SelectItem>
+                <SelectItem value="Australia/Sydney">Sydney</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="date-format" className="text-xs font-bold px-1">
+              Date Format
+            </Label>
+            <Select
+              value={settings.account.date_format}
+              onValueChange={(value: string) => handleAccountChange('date_format', value)}
+            >
+              <SelectTrigger className="w-full h-11 rounded-xl bg-muted/10 border-border/40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-border/40">
+                <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
               </SelectContent>
             </Select>
           </div>

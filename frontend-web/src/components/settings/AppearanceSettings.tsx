@@ -1,17 +1,18 @@
 'use client';
 
-import { UserSettings } from '@/lib/api/settings';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
-import { Checkbox } from '@/components/ui';
-import { useDebounce } from '@/hooks/useDebounce';
+import { UserSettings } from '../../lib/api/settings';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui';
+import { Checkbox } from '../ui';
+import { useDebounce } from '../../hooks/useDebounce';
+import { ThemeToggle } from './theme-toggle';
 import { Sun, Moon, Monitor, Type, Eye } from 'lucide-react';
 
-interface ThemeToggleProps {
+interface AppearanceSettingsProps {
   settings: UserSettings;
   onChange: (updates: Partial<UserSettings>) => void;
 }
 
-export function ThemeToggle({ settings, onChange }: ThemeToggleProps) {
+export function AppearanceSettings({ settings, onChange }: AppearanceSettingsProps) {
   const debouncedOnChange = useDebounce(onChange, 500);
 
   const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
@@ -39,30 +40,10 @@ export function ThemeToggle({ settings, onChange }: ThemeToggleProps) {
   return (
     <div className="space-y-10">
       {/* Theme Selection */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 text-muted-foreground/60">
-          <Monitor className="h-3.5 w-3.5" />
-          <h3 className="text-[10px] uppercase tracking-widest font-black">Interface Theme</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {(['light', 'dark', 'system'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => handleThemeChange(t)}
-              className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-3 ${
-                settings.theme === t
-                  ? 'bg-primary/5 border-primary text-primary shadow-sm'
-                  : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
-              }`}
-            >
-              {t === 'light' && <Sun className="h-5 w-5" />}
-              {t === 'dark' && <Moon className="h-5 w-5" />}
-              {t === 'system' && <Monitor className="h-5 w-5" />}
-              <span className="text-xs font-bold capitalize">{t}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <ThemeToggle
+        value={settings.theme as 'light' | 'dark' | 'system'}
+        onChange={handleThemeChange}
+      />
 
       {/* Font Size */}
       <div className="space-y-4">
@@ -99,7 +80,7 @@ export function ThemeToggle({ settings, onChange }: ThemeToggleProps) {
             </div>
             <Checkbox
               checked={settings.accessibility.high_contrast}
-              onChange={(e) => handleAccessibilityChange('high_contrast', e.target.checked)}
+              onCheckedChange={(checked) => handleAccessibilityChange('high_contrast', !!checked)}
               className="h-5 w-5 rounded-lg border-2 border-border/60"
             />
           </div>
@@ -113,7 +94,7 @@ export function ThemeToggle({ settings, onChange }: ThemeToggleProps) {
             </div>
             <Checkbox
               checked={settings.accessibility.reduced_motion}
-              onChange={(e) => handleAccessibilityChange('reduced_motion', e.target.checked)}
+              onCheckedChange={(checked) => handleAccessibilityChange('reduced_motion', !!checked)}
               className="h-5 w-5 rounded-lg border-2 border-border/60"
             />
           </div>

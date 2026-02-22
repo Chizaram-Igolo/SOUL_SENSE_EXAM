@@ -79,6 +79,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
 
     # CORS middleware
+    origins = settings.BACKEND_CORS_ORIGINS
     # If in production, ensure we are not allowing all origins blindly unless intended
     origins = settings.BACKEND_CORS_ORIGINS
     

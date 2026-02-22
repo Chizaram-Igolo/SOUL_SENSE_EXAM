@@ -7,7 +7,7 @@ import { Button } from '@/components/ui';
 import { Skeleton } from '@/components/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
 import {
-  ThemeToggle,
+  AppearanceSettings,
   NotificationSettings,
   PrivacySettings,
   AccountSettings,
@@ -114,6 +114,8 @@ export default function SettingsPage() {
     );
   }
 
+  if (!settings) return null;
+
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 space-y-12">
       {/* Header */}
@@ -218,7 +220,7 @@ export default function SettingsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-8">
-                  <ThemeToggle settings={settings} onChange={handleSettingChange} />
+                  <AppearanceSettings settings={settings} onChange={handleSettingChange} />
                 </CardContent>
               </Card>
             </TabsContent>

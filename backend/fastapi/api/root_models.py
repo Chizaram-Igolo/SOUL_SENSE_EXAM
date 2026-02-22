@@ -52,6 +52,12 @@ SatisfactionHistory = _models_module.SatisfactionHistory
 AssessmentResult = _models_module.AssessmentResult
 AuditLog = _models_module.AuditLog
 ExportRecord = _models_module.ExportRecord
+Achievement = _models_module.Achievement
+UserAchievement = _models_module.UserAchievement
+UserStreak = _models_module.UserStreak
+UserXP = _models_module.UserXP
+Challenge = _models_module.Challenge
+UserChallenge = _models_module.UserChallenge
 
 # Export all for easy discovery
 __all__ = [
@@ -79,4 +85,10 @@ __all__ = [
     'AssessmentResult',
     'AuditLog',
     'ExportRecord',
+    'Achievement',
+    'UserAchievement',
+    'UserStreak',
+    'UserXP',
+    'Challenge',
+    'UserChallenge',
 ]

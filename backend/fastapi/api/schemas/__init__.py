@@ -1162,3 +1162,68 @@ class AuditLogResponse(BaseModel):
         return v
 
 
+# ============================================================================
+# Gamification Schemas
+# ============================================================================
+
+class AchievementRequirement(BaseModel):
+    type: str # 'count', 'streak', 'score', 'activity'
+    target: str # 'journal', 'assessment', 'days', 'pattern'
+    value: int
+
+class AchievementResponse(BaseModel):
+    achievement_id: str
+    name: str
+    description: str
+    icon: Optional[str] = None
+    category: str
+    rarity: str
+    points_reward: int
+    unlocked: bool = False
+    progress: int = 0
+    unlocked_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UserXPResponse(BaseModel):
+    total_xp: int
+    current_level: int
+    xp_to_next_level: int
+    level_progress: float # 0.0 to 1.0
+
+    model_config = ConfigDict(from_attributes=True)
+
+class UserStreakResponse(BaseModel):
+    activity_type: str
+    current_streak: int
+    longest_streak: int
+    last_activity_date: Optional[datetime] = None
+    is_active_today: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+class LeaderboardEntry(BaseModel):
+    rank: int
+    username: str
+    total_xp: int
+    current_level: int
+    avatar_path: Optional[str] = None
+
+class ChallengeResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    challenge_type: str
+    start_date: datetime
+    end_date: datetime
+    reward_xp: int
+    status: str = "available" # available, joined, completed, failed
+    progress: Optional[Dict[str, Any]] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class GamificationSummary(BaseModel):
+    xp: UserXPResponse
+    streaks: List[UserStreakResponse]
+    recent_achievements: List[AchievementResponse]
+    active_challenges: List[ChallengeResponse]

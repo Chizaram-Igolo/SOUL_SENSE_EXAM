@@ -80,6 +80,8 @@ def create_app() -> FastAPI:
 
     # CORS middleware
     # If in production, ensure we are not allowing all origins blindly unless intended
+    origins = settings.BACKEND_CORS_ORIGINS
+    
     origins = settings.cors_origins
     
     app.add_middleware(
@@ -107,11 +109,22 @@ def create_app() -> FastAPI:
     # CORS middleware (Outer-most)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://127.0.0.1:3005", "http://localhost:3005", "tauri://localhost", "http://localhost:1420", "http://localhost:3000"],
+        allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        expose_headers=["X-API-Version"],
+        max_age=3600,  # Cache preflight requests for 1 hour
     )
+    
+    # Version header middleware
+    app.add_middleware(VersionHeaderMiddleware)
+    
+    # Register V1 API Router
+    app.include_router(api_v1_router, prefix="/api/v1")
+ 
+    # Register Health endpoints at root level for orchestration
+    app.include_router(health_router, tags=["Health"])
 
     from .exceptions import APIException
     from .constants.errors import ErrorCode

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from ..schemas import ExamResponseCreate, ExamResultCreate
 from ..root_models import User, Score, Response
 from .db_service import get_db
+from .gamification_service import GamificationService
 try:
     from app.auth.crypto import EncryptionManager
     CRYPTO_AVAILABLE = True
@@ -83,6 +84,14 @@ class ExamService:
             db.commit()
             db.refresh(new_score)
             
+            # Trigger Gamification
+            try:
+                GamificationService.award_xp(db, user.id, 100, "Assessment completion")
+                GamificationService.update_streak(db, user.id, "assessment")
+                GamificationService.check_achievements(db, user.id, "assessment")
+            except Exception as e:
+                logger.error(f"Gamification update failed for user_id={user.id}: {e}")
+
             logger.info(f"Exam saved for user_id={user.id}. Score: {data.total_score}")
             return new_score
             

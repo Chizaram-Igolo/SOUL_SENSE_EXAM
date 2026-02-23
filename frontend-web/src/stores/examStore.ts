@@ -4,10 +4,12 @@ import { Question } from '@/lib/api/questions';
 
 interface ExamState {
   questions: Question[];
-  currentIndex: number;
+  currentQuestionIndex: number;
   answers: Record<number, number>; // questionId -> answer value
   startTime: string | null; // ISO string for easy storage
   isCompleted: boolean;
+  examError: string | null;
+  isLoading: boolean;
   _hasHydrated: boolean; // For handling Next.js hydration
 
   // Actions
@@ -32,16 +34,18 @@ export const useExamStore = create<ExamState>()(
   persist(
     (set, get) => ({
       questions: [],
-      currentIndex: 0,
+      currentQuestionIndex: 0,
       answers: {},
       startTime: null,
       isCompleted: false,
+      examError: null,
+      isLoading: false,
       _hasHydrated: false,
 
       setQuestions: (questions) =>
         set({
           questions,
-          currentIndex: 0,
+          currentQuestionIndex: 0,
           answers: {},
           startTime: new Date().toISOString(),
           isCompleted: false,
@@ -57,12 +61,12 @@ export const useExamStore = create<ExamState>()(
 
       nextQuestion: () =>
         set((state) => ({
-          currentIndex: Math.min(state.currentIndex + 1, Math.max(0, state.questions.length - 1)),
+          currentQuestionIndex: Math.min(state.currentQuestionIndex + 1, Math.max(0, state.questions.length - 1)),
         })),
 
       previousQuestion: () =>
         set((state) => ({
-          currentIndex: Math.max(state.currentIndex - 1, 0),
+          currentQuestionIndex: Math.max(state.currentQuestionIndex - 1, 0),
         })),
 
       completeExam: () =>
@@ -71,27 +75,29 @@ export const useExamStore = create<ExamState>()(
         }),
 
       resetExam: () =>
-        set({
+        set((state) => ({
           questions: [],
-          currentIndex: 0,
+          currentQuestionIndex: 0,
           answers: {},
           startTime: null,
           isCompleted: false,
-        }),
+          examError: null,
+          isLoading: false,
+        })),
 
       setHasHydrated: (state) => set({ _hasHydrated: state }),
 
       // Selectors
       getCurrentQuestion: () => {
-        const { questions, currentIndex } = get();
-        return questions[currentIndex] || null;
+        const { questions, currentQuestionIndex } = get();
+        return questions[currentQuestionIndex] || null;
       },
 
-      getIsFirstQuestion: () => get().currentIndex === 0,
+      getIsFirstQuestion: () => get().currentQuestionIndex === 0,
 
       getIsLastQuestion: () => {
-        const { questions, currentIndex } = get();
-        return questions.length > 0 && currentIndex === questions.length - 1;
+        const { questions, currentQuestionIndex } = get();
+        return questions.length > 0 && currentQuestionIndex === questions.length - 1;
       },
 
       getAnsweredCount: () => Object.keys(get().answers).length,

@@ -13,7 +13,7 @@ from ..utils.network import get_real_ip
 from ..constants.errors import ErrorCode
 from ..constants.security_constants import REFRESH_TOKEN_EXPIRE_DAYS
 from ..exceptions import AuthException
-from ..root_models import User
+from ..models import User
 from ..exceptions import AuthException, APIException, RateLimitException
 # Rate limiters imported inline within routes to avoid potential circular/timing issues
 from sqlalchemy.orm import Session

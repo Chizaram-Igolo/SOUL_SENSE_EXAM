@@ -219,6 +219,7 @@ async def login(
 async def verify_2fa(
     login_request: TwoFactorLoginRequest,
     response: Response,
+    request: Request,
     auth_service: AuthService = Depends()
 ):
     """

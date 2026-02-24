@@ -10,6 +10,7 @@ interface ExamState {
   isCompleted: boolean;
   examError: string | null;
   isLoading: boolean;
+  isReviewing: boolean; // New state for review screen
   _hasHydrated: boolean; // For handling Next.js hydration
 
   // Actions
@@ -17,9 +18,11 @@ interface ExamState {
   setAnswer: (questionId: number, value: number) => void;
   nextQuestion: () => void;
   previousQuestion: () => void;
+  jumpToQuestion: (index: number) => void; // New action to jump to specific question
   completeExam: () => void;
   resetExam: () => void;
   setHasHydrated: (state: boolean) => void;
+  setIsReviewing: (isReviewing: boolean) => void; // New action to toggle review mode
 
   // Selectors (Getters)
   getCurrentQuestion: () => Question | null;
@@ -40,6 +43,7 @@ export const useExamStore = create<ExamState>()(
       isCompleted: false,
       examError: null,
       isLoading: false,
+      isReviewing: false, // Initialize review state
       _hasHydrated: false,
 
       setQuestions: (questions) =>
@@ -69,6 +73,12 @@ export const useExamStore = create<ExamState>()(
           currentQuestionIndex: Math.max(state.currentQuestionIndex - 1, 0),
         })),
 
+      jumpToQuestion: (index: number) =>
+        set((state) => ({
+          currentQuestionIndex: Math.max(0, Math.min(index, state.questions.length - 1)),
+          isReviewing: false, // Exit review mode when jumping to a question
+        })),
+
       completeExam: () =>
         set({
           isCompleted: true,
@@ -83,9 +93,12 @@ export const useExamStore = create<ExamState>()(
           isCompleted: false,
           examError: null,
           isLoading: false,
+          isReviewing: false, // Reset review state
         })),
 
       setHasHydrated: (state) => set({ _hasHydrated: state }),
+
+      setIsReviewing: (isReviewing: boolean) => set({ isReviewing }),
 
       // Selectors
       getCurrentQuestion: () => {

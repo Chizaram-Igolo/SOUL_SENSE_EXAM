@@ -28,7 +28,16 @@ export const ExamNavigation: React.FC<ExamNavigationProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+        activeElement.tagName === "TEXTAREA" ||
+        activeElement.tagName === "SELECT" ||
+        activeElement.getAttribute("role") === "radio");
+      if (isInputFocused) {
+        return; // Abort global navigation, let the browser handle standard UI traversing.
+      }
 
       if (e.key === 'ArrowLeft' && !isFirst) {
         previousQuestion();

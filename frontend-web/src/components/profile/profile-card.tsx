@@ -2,7 +2,7 @@
 
 import { PersonalProfile } from '@/lib/api/profile';
 import { Avatar, AvatarFallback } from '@/components/ui';
-import { Mail, Calendar, User as UserIcon, Briefcase, GraduationCap, Edit2, Moon, Activity, Apple } from 'lucide-react';
+import { Mail, Calendar, User as UserIcon, Briefcase, GraduationCap, Edit2, Moon, Activity, Apple, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProfileCardProps {
@@ -193,6 +193,48 @@ export function ProfileCard({
                     Diet Type
                   </p>
                   <p className="font-semibold text-sm">{profile.dietary_patterns}</p>
+                </div>
+              </div>
+            )}
+
+            {profile?.has_therapist !== undefined && (
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 border border-border/40 group hover:border-primary/20 transition-colors">
+                <div className="p-2.5 rounded-xl bg-background border border-border/40 text-muted-foreground group-hover:text-primary transition-colors">
+                  <Heart className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60 mb-0.5">
+                    Therapist Access
+                  </p>
+                  <p className="font-semibold text-sm">{profile.has_therapist ? 'Yes' : 'No'}</p>
+                </div>
+              </div>
+            )}
+
+            {profile?.support_network_size !== undefined && (
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 border border-border/40 group hover:border-primary/20 transition-colors">
+                <div className="p-2.5 rounded-xl bg-background border border-border/40 text-muted-foreground group-hover:text-primary transition-colors">
+                  <UserIcon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60 mb-0.5">
+                    Support Network
+                  </p>
+                  <p className="font-semibold text-sm">{profile.support_network_size} people</p>
+                </div>
+              </div>
+            )}
+
+            {profile?.primary_support_type && (
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/20 border border-border/40 group hover:border-primary/20 transition-colors">
+                <div className="p-2.5 rounded-xl bg-background border border-border/40 text-muted-foreground group-hover:text-primary transition-colors">
+                  <Briefcase className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60 mb-0.5">
+                    Primary Support
+                  </p>
+                  <p className="font-semibold text-sm capitalize">{profile.primary_support_type}</p>
                 </div>
               </div>
             )}

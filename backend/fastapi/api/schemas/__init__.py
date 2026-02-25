@@ -577,6 +577,9 @@ class PersonalProfileCreate(BaseModel):
     exercise_freq: Optional[str] = None
     dietary_patterns: Optional[str] = None
     sleep_hours: Optional[float] = Field(None, ge=0, le=24, description="Average hours of sleep per night (0-24)")
+    has_therapist: Optional[bool] = None
+    support_network_size: Optional[int] = Field(None, ge=0, le=100, description="Number of people in support network (0-100)")
+    primary_support_type: Optional[str] = None
 
 
 class PersonalProfileUpdate(BaseModel):
@@ -606,6 +609,9 @@ class PersonalProfileUpdate(BaseModel):
     exercise_freq: Optional[str] = None
     dietary_patterns: Optional[str] = None
     sleep_hours: Optional[float] = Field(None, ge=0, le=24, description="Average hours of sleep per night (0-24)")
+    has_therapist: Optional[bool] = None
+    support_network_size: Optional[int] = Field(None, ge=0, le=100, description="Number of people in support network (0-100)")
+    primary_support_type: Optional[str] = None
 
     @field_validator('email', mode='before')
     @classmethod
@@ -651,6 +657,9 @@ class PersonalProfileResponse(BaseModel):
     exercise_freq: Optional[str] = None
     dietary_patterns: Optional[str] = None
     sleep_hours: Optional[float] = None
+    has_therapist: Optional[bool] = None
+    support_network_size: Optional[int] = None
+    primary_support_type: Optional[str] = None
     
     last_updated: str
 

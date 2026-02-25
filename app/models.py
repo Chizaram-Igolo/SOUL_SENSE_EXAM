@@ -274,6 +274,9 @@ class PersonalProfile(Base):
     sleep_hours = Column(Float, nullable=True)
     exercise_freq = Column(String, nullable=True)
     dietary_patterns = Column(String, nullable=True)
+    has_therapist = Column(Boolean, nullable=True)
+    support_network_size = Column(Integer, nullable=True)
+    primary_support_type = Column(String, nullable=True)
     last_updated = Column(String, default=lambda: datetime.utcnow().isoformat())
     user = relationship("User", back_populates="personal_profile")
 

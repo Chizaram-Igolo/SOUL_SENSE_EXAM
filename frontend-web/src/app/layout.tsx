@@ -73,7 +73,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <WebVitalsMonitor />
         <Providers>
           <ThemeProvider
@@ -97,13 +97,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               }}
             />
             <AuthProvider>
-                <OfflineBanner />
-                <NetworkErrorBanner />
-                <NavbarController />
-                <div id="main-content" role="main" tabIndex={-1}>
-                  {children}
-                </div>
-                <BottomNavigation />
+              <OfflineBanner />
+              <NetworkErrorBanner />
+              <NavbarController />
+              <div id="main-content" role="main" tabIndex={-1}>
+                {children}
+              </div>
+              <BottomNavigation />
             </AuthProvider>
           </ThemeProvider>
         </Providers>

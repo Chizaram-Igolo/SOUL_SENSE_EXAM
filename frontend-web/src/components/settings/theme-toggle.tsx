@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Sun, Moon, Laptop } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { cn } from '../../lib/utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -18,7 +19,7 @@ export interface ThemeToggleProps {
     className?: string;
 }
 
-const STORAGE_KEY = 'soulsense-theme';
+const STORAGE_KEY = 'theme';
 
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ function resolveTheme(preference: ThemeValue): 'light' | 'dark' {
 export function ThemeToggle({ value, onChange, className }: ThemeToggleProps) {
     const [mounted, setMounted] = React.useState(false);
     const [systemTheme, setSystemTheme] = React.useState<'light' | 'dark'>('light');
+    const { setTheme } = useTheme();
 
     // Avoid hydration mismatch and track system theme
     React.useEffect(() => {
@@ -71,22 +73,19 @@ export function ThemeToggle({ value, onChange, className }: ThemeToggleProps) {
         return () => mq.removeEventListener('change', updateSystemTheme);
     }, []);
 
-    // Apply theme to document and persist
+    // Apply theme to next-themes and persist
     React.useEffect(() => {
         if (!mounted) return;
 
-        const resolved = value === 'system' ? systemTheme : value;
-        const root = document.documentElement;
-
-        root.classList.remove('light', 'dark');
-        root.classList.add(resolved);
+        // Bridge the prop value to next-themes
+        setTheme(value);
 
         try {
             localStorage.setItem(STORAGE_KEY, value);
         } catch (e) {
             // Fail silently if localStorage is blocked
         }
-    }, [value, systemTheme, mounted]);
+    }, [value, mounted, setTheme]);
 
     if (!mounted) {
         return (
@@ -170,7 +169,10 @@ export function ThemeToggle({ value, onChange, className }: ThemeToggleProps) {
                             role="radio"
                             aria-checked={isActive}
                             id={`theme-option-${option.value}`}
-                            onClick={() => onChange(option.value)}
+                            onClick={() => {
+                                setTheme(option.value);
+                                onChange(option.value);
+                            }}
                             className={cn(
                                 'relative z-10 flex flex-1 items-center justify-center gap-1.5',
                                 'py-2 px-3 rounded-lg text-xs font-medium',
@@ -222,14 +224,6 @@ export function initTheme(): ThemeValue {
         const saved = localStorage.getItem(STORAGE_KEY) as ThemeValue | null;
         const preference: ThemeValue =
             saved && ['light', 'dark', 'system'].includes(saved) ? saved : 'system';
-
-        const mq = window.matchMedia('(prefers-color-scheme: dark)');
-        const resolved = preference === 'system'
-            ? (mq.matches ? 'dark' : 'light')
-            : preference;
-
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(resolved);
 
         return preference;
     } catch {

@@ -37,6 +37,9 @@ const profileSchema = z.object({
   sleepHours: z.coerce.number().min(0, 'Sleep hours must be at least 0').max(24, 'Sleep hours must be at most 24').optional(),
   exerciseFrequency: z.enum(['none', 'light', 'moderate', 'heavy']).optional(),
   dietType: z.string().optional(),
+  hasTherapist: z.boolean().optional(),
+  supportNetworkSize: z.coerce.number().min(0, 'Network size must be at least 0').max(100, 'Network size must be at most 100').optional(),
+  primarySupportType: z.enum(['family', 'friends', 'professional', 'none']).optional(),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -76,6 +79,9 @@ export function ProfileForm({ profile, onSubmit, onCancel, isSubmitting }: Profi
       sleepHours: profile?.sleep_hours,
       exerciseFrequency: profile?.exercise_freq,
       dietType: profile?.dietary_patterns || '',
+      hasTherapist: profile?.has_therapist,
+      supportNetworkSize: profile?.support_network_size,
+      primarySupportType: profile?.primary_support_type,
     },
   });
 
@@ -273,6 +279,51 @@ export function ProfileForm({ profile, onSubmit, onCancel, isSubmitting }: Profi
                 label="Diet Type"
                 placeholder="E.g. Mediterranean, Vegetarian, Keto..."
               />
+            </div>
+
+            <div className="space-y-6 pt-6 border-t border-border/50">
+              <h3 className="text-lg font-semibold flex items-center text-foreground/80">
+                <ChevronRight className="h-5 w-5 mr-1 text-primary" />
+                Support System
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField control={form.control} name="hasTherapist" label="Has Therapist">
+                  {(field) => (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="hasTherapist"
+                        {...field}
+                        checked={field.value || false}
+                        className="rounded border-border/40"
+                      />
+                      <label htmlFor="hasTherapist" className="text-sm font-medium">
+                        I have access to a therapist
+                      </label>
+                    </div>
+                  )}
+                </FormField>
+                <FormField
+                  control={form.control}
+                  name="supportNetworkSize"
+                  label="Support Network Size"
+                  type="number"
+                  placeholder="0"
+                />
+              </div>
+
+              <FormField control={form.control} name="primarySupportType" label="Primary Support Type">
+                {(field) => (
+                  <Select {...field}>
+                    <option value="">Select support type</option>
+                    <option value="family">Family</option>
+                    <option value="friends">Friends</option>
+                    <option value="professional">Professional</option>
+                    <option value="none">None</option>
+                  </Select>
+                )}
+              </FormField>
             </div>
           </CardContent>
 

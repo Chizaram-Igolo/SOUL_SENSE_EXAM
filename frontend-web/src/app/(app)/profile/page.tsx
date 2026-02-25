@@ -47,6 +47,9 @@ export default function ProfilePage() {
       sleep_hours: data.sleepHours,
       exercise_freq: data.exerciseFrequency,
       dietary_patterns: data.dietType,
+      has_therapist: data.hasTherapist,
+      support_network_size: data.supportNetworkSize,
+      primary_support_type: data.primarySupportType,
     };
     await updateProfile(transformedData);
     setIsEditing(false);

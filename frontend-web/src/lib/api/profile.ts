@@ -70,6 +70,9 @@ export interface UserProfile {
   sleep_hours?: number;
   exercise_freq?: string;
   dietary_patterns?: string;
+  has_therapist?: boolean;
+  support_network_size?: number;
+  primary_support_type?: string;
 }
 
 export interface UpdateUserProfile {
@@ -89,6 +92,9 @@ export interface UpdateUserProfile {
   sleep_hours?: number;
   exercise_freq?: string;
   dietary_patterns?: string;
+  has_therapist?: boolean;
+  support_network_size?: number;
+  primary_support_type?: string;
 }
 
 export const profileApi = {
@@ -175,6 +181,9 @@ export const profileApi = {
         sleep_hours: data.personal_profile?.sleep_hours,
         exercise_freq: data.personal_profile?.exercise_freq,
         dietary_patterns: data.personal_profile?.dietary_patterns,
+        has_therapist: data.personal_profile?.has_therapist,
+        support_network_size: data.personal_profile?.support_network_size,
+        primary_support_type: data.personal_profile?.primary_support_type,
       };
     });
   },
@@ -192,6 +201,9 @@ export const profileApi = {
         sleep_hours: data.sleep_hours,
         exercise_freq: data.exercise_freq,
         dietary_patterns: data.dietary_patterns,
+        has_therapist: data.has_therapist,
+        support_network_size: data.support_network_size,
+        primary_support_type: data.primary_support_type,
       }),
     });
 
